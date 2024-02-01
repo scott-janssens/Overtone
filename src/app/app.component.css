@@ -1,0 +1,10 @@
+main {
+    background-color: black;
+    color: white;
+}
+
+.app {
+    display: grid;
+    grid-template-columns: 4fr 1fr;
+    grid-column-gap: 10px;
+}

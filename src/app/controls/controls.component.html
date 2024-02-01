@@ -1,0 +1,7 @@
+<h2>{{_midiService.title}}</h2>
+<ot-file></ot-file>
+<mat-list>
+    <mat-list-item *ngFor="let track of tracks">
+        <ot-track-item [track]="track"></ot-track-item>
+    </mat-list-item>
+</mat-list>

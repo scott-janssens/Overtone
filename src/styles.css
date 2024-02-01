@@ -1,1 +1,15 @@
-/* You can add global styles to this file, and also import other style files */
+body {
+    background-color: black;
+    color: white;
+}
+
+color-picker {
+    position: fixed;
+    z-index: 1;
+}
+
+color-picker > div {
+    left: unset !important;
+    right: 4em !important;
+    position: relative !important;
+}

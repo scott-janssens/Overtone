@@ -3,5 +3,5 @@
     <mat-checkbox [(ngModel)]="track!.isSequenceVisible"></mat-checkbox>
     {{track!.name}}
 
-    <input class="color-picker-display" [(colorPicker)]="color" [style.background]="color" cpAlphaChannel="disabled" [cpOKButton]="true" cpOKButtonText="OK" [cpCancelButton]="true" cpCancelButtonText="Cancel"/>
+    <input class="color-picker-display" [(colorPicker)]="track!.color" [style.background]="track!.color" cpAlphaChannel="disabled" [cpOKButton]="true" cpOKButtonText="OK" [cpCancelButton]="true" cpCancelButtonText="Cancel"/>
 </div>

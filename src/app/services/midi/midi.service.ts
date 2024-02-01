@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { AnyMetaEvent, MidiFile, SetTempoEvent, TimeSignatureEvent, TrackNameEvent, read } from "midifile-ts";
-import { EventAggregator } from "../event-aggregator/event-aggregator.service";
 import { MidiTrack } from "./MidiTrack";
+import { Subject } from "rxjs";
 
 // https://github.com/ryohey/midifile-ts
 
@@ -11,6 +11,7 @@ import { MidiTrack } from "./MidiTrack";
 export class MidiService {
     private _midiFile: MidiFile | undefined;
     get midiFile() { return this._midiFile; }
+    midiFileLoaded: Subject<MidiService> = new Subject<MidiService>();
 
     private _title: string = "";
     get title() { return this._title; }
@@ -25,9 +26,9 @@ export class MidiService {
     get tempo(): number { return this._tempo; }
 
     private _tracks: MidiTrack[] = [];
-    get tracks() { return this._tracks; }
+    get tracks(): MidiTrack[] { return this._tracks; }
 
-    constructor(private _eventAggregator: EventAggregator) {
+    constructor() {
     }
 
     async loadMidiFileAsync(file: File): Promise<void> {
@@ -43,11 +44,12 @@ export class MidiService {
                     this.getMetaData(this._midiFile);
 
                     for (let i = 1; i < this._midiFile.tracks.length; i++) {
-                        this._tracks.push(new MidiTrack(this._midiFile.tracks[i]));
+                        let track = new MidiTrack(this._midiFile.tracks[i]);
+                        this._tracks.push(track);
                     }
                 }
 
-                this._eventAggregator.publish("MidiFileLoaded", this);
+                this.midiFileLoaded.next(this);
             }
         };
 
@@ -57,24 +59,6 @@ export class MidiService {
             await new Promise((r) => setTimeout(r, 100));
         }
     }
-
-    // private loadMidi(e: ProgressEvent<FileReader>) {
-    //     // TODO: Don't assume file read in one go.
-
-    //     if (e.target != null) {
-    //         this._midiFile = read(e.target.result as ArrayBuffer);
-
-    //         if (this._midiFile.header.trackCount > 0) {
-    //             this.getMetaData(this._midiFile);
-
-    //             for (let i = 1; i < this._midiFile.tracks.length; i++) {
-    //                 this._tracks.push(new MidiTrack(this._midiFile.tracks[i]));
-    //             }
-    //         }
-
-    //         this._eventAggregator.publish("MidiFileLoaded", this);
-    //     }
-    // }
 
     private getMetaData(midi: MidiFile): void {
         for (let event of midi.tracks[0]) {

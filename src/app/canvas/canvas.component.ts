@@ -1,9 +1,9 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnChanges, OnInit, SimpleChanges } from "@angular/core";
 import { AnyEvent, AnyMetaEvent, MidiFile, SetTempoEvent, TimeSignatureEvent, TrackNameEvent } from "midifile-ts";
 import { OvertoneSequence } from "../../overtone/OvertoneSequence";
 import { Pitch } from "../../overtone/Pitch";
 import { MidiService } from "../services/midi/midi.service";
-import { EventAggregator } from "../services/event-aggregator/event-aggregator.service";
+import { MidiTrack } from "../services/midi/MidiTrack";
 
 const trackDrawHeight: number = 9;
 let quarterNoteWidth: number = trackDrawHeight * 4;
@@ -32,7 +32,7 @@ export class CanvasComponent implements OnInit {
         "red"
     ];
 
-    constructor(private _midiService: MidiService, private _eventAggregator: EventAggregator) {
+    constructor(private _midiService: MidiService) {
     }
 
     ngOnInit(): void {
@@ -46,48 +46,64 @@ export class CanvasComponent implements OnInit {
         canvas.width = this._trackDrawWidth;
         canvas.height = this._trackDrawHeight * this._trackCount;
         this._ctx = canvas.getContext("2d")!;
-        this._eventAggregator.subscribe("MidiFileLoaded", this.onFileLoaded, this);
+        this._midiService.midiFileLoaded.subscribe({ next: e => this.onFileLoaded(e, this) });
     }
 
     public onFileLoaded(midiService: MidiService, comp: CanvasComponent): void {
-        comp.drawBackground();
-        comp.drawBarLines();
-
         for (let i = 1; i < midiService.tracks.length; i++) {
-            comp.drawMidiTrack(midiService.midiFile!.tracks[i], comp._trackColors[i % 5]);
+            midiService.tracks[i].trackVisibilityChange.subscribe(e => this.redraw());
+            midiService.tracks[i].overtoneVisibilityChange.subscribe(e => this.redraw());
+            midiService.tracks[i].colorChange.subscribe(e => this.redraw());
+        }
+
+        comp.redraw();
+    }
+
+    private redraw(): void {
+        this.drawBackground();
+        this.drawBarLines();
+
+        for (let i = 1; i < this._midiService.tracks.length; i++) {
+            this.drawMidiTrack(this._midiService.tracks[i]);
         }
     }
 
-    private drawMidiTrack(track: AnyEvent[], color: string): void {
+    private drawMidiTrack(track: MidiTrack): void {
         if (this._ctx == null) { throw new Error("Canvas context not set."); }
 
-        let time = 0;
-        let notes: { [Key: number]: Note | null } = {};
+        if (track.isTrackVisible || track.isSequenceVisible) {
+            let time = 0;
+            let notes: { [Key: number]: Note | null } = {};
 
-        this._ctx.fillStyle = color;
+            this._ctx.fillStyle = track.color;
 
-        for (let event of track) {
-            if (event.type == "channel") {
-                switch (event.subtype) {
-                    case "noteOn":
-                        if (notes[event.noteNumber] == null) {
-                            notes[event.noteNumber] = new Note(time + event.deltaTime, event.noteNumber, event.velocity);
-                        }
-                        break;
-                    case "noteOff":
-                        let note = notes[event.noteNumber];
-                        if (note != null) {
-                            this._ctx.fillRect(note.x + 2 * this._trackDrawHeight + 1, note.y, quarterNoteWidth - 1, this._trackDrawHeight - 2);
-                            notes[event.noteNumber] = null;
+            for (let event of track.events) {
+                if (event.type == "channel") {
+                    switch (event.subtype) {
+                        case "noteOn":
+                            if (notes[event.noteNumber] == null) {
+                                notes[event.noteNumber] = new Note(time + event.deltaTime, event.noteNumber, event.velocity);
+                            }
+                            break;
+                        case "noteOff":
+                            let note = notes[event.noteNumber];
+                            if (note != null) {
+                                if (track.isTrackVisible) {
+                                    this._ctx.fillRect(note.x + 2 * this._trackDrawHeight + 1, note.y, quarterNoteWidth - 1, this._trackDrawHeight - 2);
+                                }
+                                notes[event.noteNumber] = null;
 
-                            this.drawOvertones(event.noteNumber, note.x + 2 * this._trackDrawHeight + 1, quarterNoteWidth, color);
-                        }
-                        break;
-                    case "controller":
-                        break;
+                                if (track.isSequenceVisible) {
+                                    this.drawOvertones(event.noteNumber, note.x + 2 * this._trackDrawHeight + 1, quarterNoteWidth, track.color);
+                                }
+                            }
+                            break;
+                        case "controller":
+                            break;
+                    }
+
+                    time += event.deltaTime;
                 }
-
-                time += event.deltaTime;
             }
         }
     }

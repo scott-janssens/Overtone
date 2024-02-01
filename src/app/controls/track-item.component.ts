@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { MidiTrackMetaData } from '../services/midi/MidiTrackMetaData';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { FormsModule } from '@angular/forms';
 import { ColorPickerModule } from 'ngx-color-picker';
+import { MidiTrack } from '../services/midi/MidiTrack';
 
 @Component({
   selector: 'ot-track-item',
@@ -12,8 +12,6 @@ import { ColorPickerModule } from 'ngx-color-picker';
   styleUrl: './track-item.component.css'
 })
 export class TrackItemComponent {
-  @Input() track: MidiTrackMetaData | undefined;
-  @Output() notify: EventEmitter<MidiTrackMetaData> = new EventEmitter<MidiTrackMetaData>();
-
-  color: string = "red";
+  @Input() track: MidiTrack | undefined;
+  @Output() notify: EventEmitter<MidiTrack> = new EventEmitter<MidiTrack>();
 }

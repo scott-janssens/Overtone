@@ -20,21 +20,10 @@ export class MidiTrack {
     set isTrackVisible(value: boolean) {
         if (this._isTrackVisible != value) {
             this._isTrackVisible = value;
-            this._isSequenceVisible = value;
             this.trackVisibilityChange.next(this);
         }
     }
     trackVisibilityChange: Subject<MidiTrack> = new Subject<MidiTrack>();
-
-    private _isSequenceVisible: boolean = true;
-    get isSequenceVisible() { return this._isSequenceVisible; }
-    set isSequenceVisible(value: boolean) {
-        if (this._isSequenceVisible != value) {
-            this._isSequenceVisible = value;
-            this.overtoneVisibilityChange.next(this);
-        }
-    }
-    overtoneVisibilityChange: Subject<MidiTrack> = new Subject<MidiTrack>();
 
     constructor(events: AnyEvent[]) {
         this.events = events;

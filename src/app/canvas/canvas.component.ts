@@ -52,7 +52,6 @@ export class CanvasComponent implements OnInit {
     public onFileLoaded(midiService: MidiService, comp: CanvasComponent): void {
         for (let i = 1; i < midiService.tracks.length; i++) {
             midiService.tracks[i].trackVisibilityChange.subscribe(e => this.redraw());
-            midiService.tracks[i].overtoneVisibilityChange.subscribe(e => this.redraw());
             midiService.tracks[i].colorChange.subscribe(e => this.redraw());
         }
 
@@ -71,7 +70,7 @@ export class CanvasComponent implements OnInit {
     private drawMidiTrack(track: MidiTrack): void {
         if (this._ctx == null) { throw new Error("Canvas context not set."); }
 
-        if (track.isTrackVisible || track.isSequenceVisible) {
+        if (track.isTrackVisible) {
             let time = 0;
             let notes: { [Key: number]: Note | null } = {};
 
@@ -88,14 +87,9 @@ export class CanvasComponent implements OnInit {
                         case "noteOff":
                             let note = notes[event.noteNumber];
                             if (note != null) {
-                                if (track.isTrackVisible) {
-                                    this._ctx.fillRect(note.x + 2 * this._trackDrawHeight + 1, note.y, quarterNoteWidth - 1, this._trackDrawHeight - 2);
-                                }
+                                this._ctx.fillRect(note.x + 2 * this._trackDrawHeight + 1, note.y, quarterNoteWidth - 1, this._trackDrawHeight - 2);
                                 notes[event.noteNumber] = null;
-
-                                if (track.isSequenceVisible) {
-                                    this.drawOvertones(event.noteNumber, note.x + 2 * this._trackDrawHeight + 1, quarterNoteWidth, track.color);
-                                }
+                                this.drawOvertones(event.noteNumber, note.x + 2 * this._trackDrawHeight + 1, quarterNoteWidth, track.color);
                             }
                             break;
                         case "controller":

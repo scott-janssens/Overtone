@@ -24,13 +24,7 @@ export class CanvasComponent implements OnInit {
     private _trackName: string = "";
     private readonly _trackCount = 96;
 
-    public _trackColors: string[] = [
-        "green",
-        "blue",
-        "yellow",
-        "orange",
-        "red"
-    ];
+    zoom: number = 1;
 
     constructor(private _midiService: MidiService) {
     }
@@ -110,14 +104,14 @@ export class CanvasComponent implements OnInit {
         const sequence = new OvertoneSequence(Pitch.fromMidi(midiNote).frequency, 4068);
         const halfHeight = this._trackDrawHeight / 2;
 
-        this._ctx.strokeStyle = this._midiService.showHeatMap ? "red" : color;
+        this._ctx.strokeStyle = color;
         this._ctx.lineWidth = 1;
 
         for (let i = 1; i < sequence.length; i++) {
             let overtone = sequence[i];
 
-            if (this._midiService.showHeatMap && this._midiService.heatMapThreshold > Math.abs(overtone.cents)) {
-                continue;
+            if (this._midiService.showHeatMap) {
+                this._ctx.strokeStyle = this._midiService.heatMapThreshold > Math.abs(overtone.cents) ? "green" : "red";
             }
 
             let y = -(overtone.closestPitch.midi - 107) * this._trackDrawHeight + halfHeight - this._trackDrawHeight * overtone.cents / 100;

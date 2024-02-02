@@ -9,6 +9,14 @@ import { Subject } from "rxjs";
     providedIn: "root"
 })
 export class MidiService {
+    private _trackColors: string[] = [
+        "green",
+        "blue",
+        "yellow",
+        "orange",
+        "red"
+    ];
+
     private _midiFile: MidiFile | undefined;
     get midiFile(): MidiFile | undefined { return this._midiFile; }
     midiFileLoaded: Subject<MidiService> = new Subject<MidiService>();
@@ -38,8 +46,8 @@ export class MidiService {
     }
     showHeatMapChange: Subject<boolean> = new Subject<boolean>();
 
-    private _heatMapThreshold: number = 0;
-    get heatMapThreshold(): number {return this._heatMapThreshold;}
+    private _heatMapThreshold: number = 10;
+    get heatMapThreshold(): number { return this._heatMapThreshold; }
     set heatMapThreshold(value: number) {
         if (this._heatMapThreshold != value) {
             this._heatMapThreshold = value;
@@ -51,8 +59,16 @@ export class MidiService {
     constructor() {
     }
 
+    private reset(): void {
+        this._tracks = [];
+        this._title = "";
+        this._timeSigNumerator = 4;
+        this._timeSigDenominator = 4;
+        this._tempo = 120;
+    }
+
     async loadMidiFileAsync(file: File): Promise<void> {
-        const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+        this.reset();
         const reader = new FileReader();
         reader.onload = e => {
             // TODO: Don't assume file read in one go.
@@ -65,6 +81,7 @@ export class MidiService {
 
                     for (let i = 1; i < this._midiFile.tracks.length; i++) {
                         let track = new MidiTrack(this._midiFile.tracks[i]);
+                        track.color = this._trackColors[i % this._trackColors.length];
                         this._tracks.push(track);
                     }
                 }

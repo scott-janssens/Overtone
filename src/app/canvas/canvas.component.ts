@@ -46,7 +46,9 @@ export class CanvasComponent implements OnInit {
         canvas.width = this._trackDrawWidth;
         canvas.height = this._trackDrawHeight * this._trackCount;
         this._ctx = canvas.getContext("2d")!;
-        this._midiService.midiFileLoaded.subscribe({ next: e => this.onFileLoaded(e, this) });
+        this._midiService.midiFileLoaded.subscribe(e => this.onFileLoaded(e, this));
+        this._midiService.showHeatMapChange.subscribe(e => this.redraw());
+        this._midiService.heatMapThresholdChange.subscribe(e => this.redraw());
     }
 
     public onFileLoaded(midiService: MidiService, comp: CanvasComponent): void {
@@ -108,11 +110,16 @@ export class CanvasComponent implements OnInit {
         const sequence = new OvertoneSequence(Pitch.fromMidi(midiNote).frequency, 4068);
         const halfHeight = this._trackDrawHeight / 2;
 
-        this._ctx.strokeStyle = color;
+        this._ctx.strokeStyle = this._midiService.showHeatMap ? "red" : color;
         this._ctx.lineWidth = 1;
 
         for (let i = 1; i < sequence.length; i++) {
             let overtone = sequence[i];
+
+            if (this._midiService.showHeatMap && this._midiService.heatMapThreshold > Math.abs(overtone.cents)) {
+                continue;
+            }
+
             let y = -(overtone.closestPitch.midi - 107) * this._trackDrawHeight + halfHeight - this._trackDrawHeight * overtone.cents / 100;
             this._ctx.beginPath();
             this._ctx.moveTo(x, y);

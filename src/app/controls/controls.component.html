@@ -1,7 +1,18 @@
-<h2>{{_midiService.title}}</h2>
+<h2>{{midiService.title}}</h2>
 <ot-file></ot-file>
-<mat-list>
-    <mat-list-item *ngFor="let track of tracks">
-        <ot-track-item [track]="track"></ot-track-item>
-    </mat-list-item>
-</mat-list>
+<div *ngIf="midiService.midiFile != undefined">
+    <mat-list>
+        <mat-list-item *ngFor="let track of tracks">
+            <ot-track-item [track]="track"></ot-track-item>
+        </mat-list-item>
+    </mat-list>
+    <mat-radio-group [(ngModel)]="midiService.showHeatMap">
+        <mat-radio-button [value]="false">Frequencies</mat-radio-button>
+        <mat-radio-button [value]="true">Heatmap</mat-radio-button>
+    </mat-radio-group>
+    <div>
+        <mat-slider discrete min="0" max="50" [(ngModel)]="midiService.heatMapThreshold" ngDefaultControl>
+            <input matSliderThumb>
+        </mat-slider>
+    </div>
+</div>

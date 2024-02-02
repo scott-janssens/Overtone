@@ -10,7 +10,7 @@ import { Subject } from "rxjs";
 })
 export class MidiService {
     private _midiFile: MidiFile | undefined;
-    get midiFile() { return this._midiFile; }
+    get midiFile(): MidiFile | undefined { return this._midiFile; }
     midiFileLoaded: Subject<MidiService> = new Subject<MidiService>();
 
     private _title: string = "";
@@ -27,6 +27,26 @@ export class MidiService {
 
     private _tracks: MidiTrack[] = [];
     get tracks(): MidiTrack[] { return this._tracks; }
+
+    private _showHeatMap: boolean = false;
+    get showHeatMap(): boolean { return this._showHeatMap; }
+    set showHeatMap(value: boolean) {
+        if (this._showHeatMap != value) {
+            this._showHeatMap = value;
+            this.showHeatMapChange.next(value);
+        }
+    }
+    showHeatMapChange: Subject<boolean> = new Subject<boolean>();
+
+    private _heatMapThreshold: number = 0;
+    get heatMapThreshold(): number {return this._heatMapThreshold;}
+    set heatMapThreshold(value: number) {
+        if (this._heatMapThreshold != value) {
+            this._heatMapThreshold = value;
+            this.heatMapThresholdChange.next(value);
+        }
+    }
+    heatMapThresholdChange: Subject<number> = new Subject<number>();
 
     constructor() {
     }

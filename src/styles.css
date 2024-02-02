@@ -1,3 +1,5 @@
+@import "../node_modules/@angular/material/prebuilt-themes/purple-green.css";
+
 body {
     background-color: black;
     color: white;

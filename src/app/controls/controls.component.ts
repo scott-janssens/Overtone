@@ -1,7 +1,11 @@
-import { Component } from "@angular/core";
+import { Component, forwardRef } from "@angular/core";
+import { CommonModule } from '@angular/common';
+import { FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { LoadMidiFileComponent } from "../file/load-midi-file.component";
 import { MatList, MatListItem } from '@angular/material/list';
-import { CommonModule } from '@angular/common';
+import { MatSliderModule } from '@angular/material/slider';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatCheckbox } from '@angular/material/checkbox';
 import { TrackItemComponent } from "./track-item.component";
 import { MidiService } from "../services/midi/midi.service";
 import { MidiTrack } from "../services/midi/MidiTrack";
@@ -10,12 +14,12 @@ import { MidiTrack } from "../services/midi/MidiTrack";
     selector: "ot-controls",
     templateUrl: "./controls.component.html",
     styleUrl: "./controls.component.css",
-    imports: [LoadMidiFileComponent, TrackItemComponent, MatList, MatListItem, CommonModule],
+    imports: [LoadMidiFileComponent, TrackItemComponent, MatList, MatListItem, MatSliderModule, MatRadioModule, MatCheckbox, CommonModule, FormsModule], 
     standalone: true
 })
 export class ControlsComponent {
-    get tracks(): MidiTrack[] { return this._midiService.tracks; }
+    get tracks(): MidiTrack[] { return this.midiService.tracks; }
 
-    constructor(readonly _midiService: MidiService) {
+    constructor(readonly midiService: MidiService) {
     }
 }

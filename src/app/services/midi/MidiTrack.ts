@@ -1,3 +1,4 @@
+import Color from "color";
 import { AnyEvent, TrackNameEvent } from "midifile-ts";
 import { Subject } from "rxjs";
 
@@ -5,11 +6,12 @@ export class MidiTrack {
     readonly name: string = "";
     readonly events: AnyEvent[];
 
-    private _color: string = "green";
-    public get color(): string { return this._color; }
+    private _color: Color = Color("white");
+    public get color(): string { return this._color.hex(); }
     public set color(value: string) {
-        if (this._color != value) {
-            this._color = value;
+        const newColor = Color(value);
+        if (this._color != newColor) {
+            this._color = newColor;
             this.colorChange.next(this);
         }
     }

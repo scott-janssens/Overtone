@@ -4,6 +4,7 @@ import { OvertoneSequence } from "../../overtone/OvertoneSequence";
 import { Pitch } from "../../overtone/Pitch";
 import { MidiService } from "../services/midi/midi.service";
 import { MidiTrack } from "../services/midi/MidiTrack";
+import Color from "color";
 
 const trackDrawHeight: number = 9;
 let quarterNoteWidth: number = trackDrawHeight * 4;
@@ -104,14 +105,30 @@ export class CanvasComponent implements OnInit {
         const sequence = new OvertoneSequence(Pitch.fromMidi(midiNote).frequency, 4068);
         const halfHeight = this._trackDrawHeight / 2;
 
-        this._ctx.strokeStyle = color;
         this._ctx.lineWidth = 1;
+        let drawColor: Color;
+        let greenColor: Color;
+        let redColor: Color;
+
+        if (this._midiService.showHeatMap) {
+            greenColor = Color("lime");
+            redColor = Color("red");
+        }
+        else {
+            drawColor = Color(color);
+        }
 
         for (let i = 1; i < sequence.length; i++) {
             let overtone = sequence[i];
 
             if (this._midiService.showHeatMap) {
-                this._ctx.strokeStyle = this._midiService.heatMapThreshold > Math.abs(overtone.cents) ? "green" : "red";
+                greenColor = greenColor!.darken(0.1);
+                redColor = redColor!.darken(0.15);
+                this._ctx.strokeStyle = this._midiService.heatMapThreshold > Math.abs(overtone.cents) ? greenColor.hex() : redColor.hex();
+            }
+            else {
+                drawColor = drawColor!.darken(0.15);
+                this._ctx.strokeStyle = drawColor.hex();
             }
 
             let y = -(overtone.closestPitch.midi - 107) * this._trackDrawHeight + halfHeight - this._trackDrawHeight * overtone.cents / 100;

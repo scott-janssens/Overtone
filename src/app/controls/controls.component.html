@@ -11,7 +11,7 @@
         <mat-radio-button [value]="true">Heatmap</mat-radio-button>
     </mat-radio-group>
     <div>
-        <mat-slider discrete min="0" max="50" [(ngModel)]="midiService.heatMapThreshold" ngDefaultControl>
+        <mat-slider discrete min="0" max="50" [(ngModel)]="midiService.heatMapThreshold" [disabled]="!midiService.showHeatMap" ngDefaultControl>
             <input matSliderThumb>
         </mat-slider>
     </div>

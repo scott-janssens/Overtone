@@ -1,5 +1,4 @@
-import { Component, OnChanges, OnInit, SimpleChanges } from "@angular/core";
-import { AnyEvent, AnyMetaEvent, MidiFile, SetTempoEvent, TimeSignatureEvent, TrackNameEvent } from "midifile-ts";
+import { Component, HostListener, OnChanges, OnInit, SimpleChanges } from "@angular/core";
 import { OvertoneSequence } from "../../overtone/OvertoneSequence";
 import { Pitch } from "../../overtone/Pitch";
 import { MidiService } from "../services/midi/midi.service";
@@ -17,13 +16,20 @@ let quarterNoteWidth: number = trackDrawHeight * 4;
 })
 
 export class CanvasComponent implements OnInit {
+    private _container: HTMLDivElement | undefined;
+    private _canvas: HTMLCanvasElement | undefined;
     private _ctx: CanvasRenderingContext2D | undefined;
     private _trackDrawWidth: number = 1200;
     private readonly _trackDrawHeight = trackDrawHeight;
     private _whiteKey: string = "#04242e";
     private _blackKey: string = "#000000";
-    private _trackName: string = "";
     private readonly _trackCount = 96;
+
+    private _isDragging: boolean = false;
+    private _lastMouseX: number = -1;
+    private _lastMouseY: number = -1;
+    private _translateX: number = 0;
+    private _translateY: number = 0;
 
     zoom: number = 1;
 
@@ -31,20 +37,30 @@ export class CanvasComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        let canvas = document.getElementById('canvas') as HTMLCanvasElement;
+        this._container = document.getElementsByClassName("canvas-container")[0] as HTMLDivElement;
+        this._canvas = document.getElementById('canvas') as HTMLCanvasElement;
 
-        if (canvas === null) {
+        if (this._canvas === null) {
             throw new Error("no id 'canvas' found.");
         }
 
-        this._trackDrawWidth = canvas.parentElement?.offsetWidth!;
-        canvas.width = this._trackDrawWidth;
-        canvas.height = this._trackDrawHeight * this._trackCount;
-        this._ctx = canvas.getContext("2d")!;
+        this._trackDrawWidth = this._canvas.parentElement?.offsetWidth!;
+        this._canvas.width = this._trackDrawWidth;
+        this._canvas.height = this._trackDrawHeight * this._trackCount;
+        this._ctx = this._canvas.getContext("2d")!;
         this._midiService.midiFileLoaded.subscribe(e => this.onFileLoaded(e, this));
         this._midiService.showHeatMapChange.subscribe(e => this.redraw());
         this._midiService.heatMapThresholdChange.subscribe(e => this.redraw());
     }
+
+    // @HostListener('window:resize')
+    // onResize() {
+    //     this.canvaHeight = Math.floor(window.innerHeight * 0.91);
+    //     this.canvaWidth = Math.floor(window.innerWidth * 0.75);
+    //     this.canvas.nativeElement.height = this.canvaHeight;
+    //     this.canvas.nativeElement.width = this.canvaWidth;
+    //     this.update();
+    // }
 
     public onFileLoaded(midiService: MidiService, comp: CanvasComponent): void {
         for (let i = 1; i < midiService.tracks.length; i++) {
@@ -53,6 +69,74 @@ export class CanvasComponent implements OnInit {
         }
 
         comp.redraw();
+    }
+
+    onWheelScroll(event: WheelEvent) {
+        const oldVirtualWidth = this._canvas!.width * this.zoom;
+        const oldVirtualHeight = this._canvas!.height * this.zoom;
+        const newZoom = this.zoom + 0.00025 * event.deltaY;
+        this.zoom = (newZoom < 1) ? 1 : newZoom;
+
+        const oldTransX = this._translateX;
+        const pctX = (event.clientX - this._translateX) / oldVirtualWidth;
+        const newVirtualWidth = this._canvas!.offsetWidth * this.zoom;
+        this._translateX = event.clientX - newVirtualWidth * pctX;
+
+        const pctY = (event.clientY - this._translateY) / oldVirtualHeight;
+        const newVirtualHeight = this._canvas!.height * this.zoom;
+        this._translateY = event.clientY - newVirtualHeight * pctY;
+
+        this.validateTranslation();
+        this._canvas!.style.transform = "translate(" + this._translateX + "px," + this._translateY + "px) scale(" + this.zoom + "," + this.zoom + ")";
+    }
+
+    mouseDown(event: PointerEvent) {
+        this._isDragging = true;
+        this._lastMouseX = event.clientX;
+        this._lastMouseY = event.clientY;
+        this._canvas!.setPointerCapture(event.pointerId);
+        this._canvas!.onpointermove = e => this.mouseMove(e, this);
+        this._canvas!.style.cursor = "grabbing";
+    }
+
+    mouseUp(event: PointerEvent) {
+        this._isDragging = false;
+        this._canvas!.releasePointerCapture(event.pointerId);
+        this._canvas!.onpointermove = null;
+        this._canvas!.style.cursor = "grab";
+    }
+
+    mouseMove(event: PointerEvent, comp: CanvasComponent) {
+        comp._translateX += event.clientX - comp._lastMouseX;
+        comp._translateY += event.clientY - comp._lastMouseY;
+
+        comp.validateTranslation();
+
+        comp._lastMouseX = event.clientX;
+        comp._lastMouseY = event.clientY;
+        comp._canvas!.style.transform = "translate(" + comp._translateX + "px," + comp._translateY + "px) scale(" + comp.zoom + "," + comp.zoom + ")";
+    }
+
+    private validateTranslation(): void {
+        if (this._translateX > 0) {
+            this._translateX = 0;
+        }
+        else {
+            const minX = this._canvas!.width - this._canvas!.width * this.zoom;
+            if (this._translateX < minX) {
+                this._translateX = minX;
+            }
+        }
+
+        if (this._translateY > 0) {
+            this._translateY = 0;
+        }
+        else {
+            const minY = this._canvas!.height - this._canvas!.height * this.zoom;
+            if (this._translateY < minY) {
+                this._translateY = minY;
+            }
+        }
     }
 
     private redraw(): void {

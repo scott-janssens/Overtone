@@ -4,6 +4,7 @@ import { Pitch } from "../../overtone/Pitch";
 import { MidiService } from "../services/midi/midi.service";
 import { MidiTrack } from "../services/midi/MidiTrack";
 import Color from "color";
+import { NonNullAssert } from "@angular/compiler";
 
 const trackDrawHeight: number = 9;
 let quarterNoteWidth: number = trackDrawHeight * 4;
@@ -24,16 +25,18 @@ export class CanvasComponent implements OnInit {
     private _whiteKey: string = "#04242e";
     private _blackKey: string = "#000000";
     private readonly _trackCount = 96;
+    private _lastWheelEvent: WheelEvent | null = null;
 
-    private _isDragging: boolean = false;
     private _lastMouseX: number = -1;
     private _lastMouseY: number = -1;
     private _translateX: number = 0;
     private _translateY: number = 0;
 
-    zoom: number = 1;
+    private get zoom(): number { return this._midiService.zoom; }
+    private set zoom(value: number) { this._midiService.zoom = value;}
 
     constructor(private _midiService: MidiService) {
+        _midiService.zoomChange.subscribe(v => this.performZoom(v));
     }
 
     ngOnInit(): void {
@@ -72,26 +75,12 @@ export class CanvasComponent implements OnInit {
     }
 
     onWheelScroll(event: WheelEvent) {
-        const oldVirtualWidth = this._canvas!.width * this.zoom;
-        const oldVirtualHeight = this._canvas!.height * this.zoom;
-        const newZoom = this.zoom + 0.00025 * event.deltaY;
-        this.zoom = (newZoom < 1) ? 1 : newZoom;
-
-        const oldTransX = this._translateX;
-        const pctX = (event.clientX - this._translateX) / oldVirtualWidth;
-        const newVirtualWidth = this._canvas!.offsetWidth * this.zoom;
-        this._translateX = event.clientX - newVirtualWidth * pctX;
-
-        const pctY = (event.clientY - this._translateY) / oldVirtualHeight;
-        const newVirtualHeight = this._canvas!.height * this.zoom;
-        this._translateY = event.clientY - newVirtualHeight * pctY;
-
-        this.validateTranslation();
-        this._canvas!.style.transform = "translate(" + this._translateX + "px," + this._translateY + "px) scale(" + this.zoom + "," + this.zoom + ")";
+        this._lastWheelEvent = event;
+        this.zoom = this.zoom + 0.00025 * event.deltaY;
+        this._lastWheelEvent = null;
     }
 
     mouseDown(event: PointerEvent) {
-        this._isDragging = true;
         this._lastMouseX = event.clientX;
         this._lastMouseY = event.clientY;
         this._canvas!.setPointerCapture(event.pointerId);
@@ -100,7 +89,6 @@ export class CanvasComponent implements OnInit {
     }
 
     mouseUp(event: PointerEvent) {
-        this._isDragging = false;
         this._canvas!.releasePointerCapture(event.pointerId);
         this._canvas!.onpointermove = null;
         this._canvas!.style.cursor = "grab";
@@ -115,6 +103,41 @@ export class CanvasComponent implements OnInit {
         comp._lastMouseX = event.clientX;
         comp._lastMouseY = event.clientY;
         comp._canvas!.style.transform = "translate(" + comp._translateX + "px," + comp._translateY + "px) scale(" + comp.zoom + "," + comp.zoom + ")";
+    }
+
+    private _lastVirtualWidth: number = 0;
+    private _lastVirtualHeight: number = 0;
+
+    private performZoom(newZoom: number): void {
+        let x: number;
+        let y: number;
+
+        if (this._lastWheelEvent != null) {
+            x = this._lastWheelEvent.clientX;
+            y = this._lastWheelEvent.clientY;
+        }
+        else {
+            x =  this._canvas!.clientWidth / 2;
+            y = this._canvas!.clientHeight / 2
+        }
+
+        // const oldVirtualWidth = this._canvas!.width * this.zoom;
+        // const oldVirtualHeight = this._canvas!.height * this.zoom;
+
+        const oldTransX = this._translateX;
+        const pctX = (x - this._translateX) / this._lastVirtualWidth;
+        const newVirtualWidth = this._canvas!.offsetWidth * this.zoom;
+        this._translateX = x - newVirtualWidth * pctX;
+
+        const pctY = (y - this._translateY) / this._lastVirtualHeight;
+        const newVirtualHeight = this._canvas!.height * this.zoom;
+        this._translateY = y - newVirtualHeight * pctY;
+
+        this._lastVirtualWidth = newVirtualWidth;
+        this._lastVirtualHeight = newVirtualHeight;
+
+        this.validateTranslation();
+        this._canvas!.style.transform = "translate(" + this._translateX + "px," + this._translateY + "px) scale(" + this.zoom + "," + this.zoom + ")";
     }
 
     private validateTranslation(): void {

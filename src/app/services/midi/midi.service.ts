@@ -56,6 +56,24 @@ export class MidiService {
     }
     heatMapThresholdChange: Subject<number> = new Subject<number>();
 
+    private _zoom: number = 1;
+    get zoom(): number { return this._zoom; }
+    set zoom(value: number) {
+        value = Number(value);
+        if (value < 1) {
+            value = 1;
+        }
+        else if (value > 4) {
+            value = 4;
+        }
+
+        if (this._zoom != value) {
+            this._zoom = value;
+            this.zoomChange.next(value);
+        }
+    }
+    zoomChange: Subject<number> = new Subject<number>();
+
     constructor() {
     }
 

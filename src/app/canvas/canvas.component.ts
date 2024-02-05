@@ -4,7 +4,6 @@ import { Pitch } from "../../overtone/Pitch";
 import { MidiService } from "../services/midi/midi.service";
 import { MidiTrack } from "../services/midi/MidiTrack";
 import Color from "color";
-import { NonNullAssert } from "@angular/compiler";
 
 const trackDrawHeight: number = 9;
 let quarterNoteWidth: number = trackDrawHeight * 4;
@@ -55,15 +54,6 @@ export class CanvasComponent implements OnInit {
         this._midiService.showHeatMapChange.subscribe(e => this.redraw());
         this._midiService.heatMapThresholdChange.subscribe(e => this.redraw());
     }
-
-    // @HostListener('window:resize')
-    // onResize() {
-    //     this.canvaHeight = Math.floor(window.innerHeight * 0.91);
-    //     this.canvaWidth = Math.floor(window.innerWidth * 0.75);
-    //     this.canvas.nativeElement.height = this.canvaHeight;
-    //     this.canvas.nativeElement.width = this.canvaWidth;
-    //     this.update();
-    // }
 
     public onFileLoaded(midiService: MidiService, comp: CanvasComponent): void {
         for (let i = 1; i < midiService.tracks.length; i++) {
@@ -120,10 +110,7 @@ export class CanvasComponent implements OnInit {
             x =  this._canvas!.clientWidth / 2;
             y = this._canvas!.clientHeight / 2
         }
-
-        // const oldVirtualWidth = this._canvas!.width * this.zoom;
-        // const oldVirtualHeight = this._canvas!.height * this.zoom;
-
+        
         const oldTransX = this._translateX;
         const pctX = (x - this._translateX) / this._lastVirtualWidth;
         const newVirtualWidth = this._canvas!.offsetWidth * this.zoom;

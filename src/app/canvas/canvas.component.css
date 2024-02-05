@@ -1,8 +1,10 @@
 .canvas-container {
     overflow: hidden;
+    max-height: 864px;
 }
 
 .canvas {
     transform-origin: top left;
+    height: 864px;
     cursor: grab;
 }

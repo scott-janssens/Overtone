@@ -1,5 +1,6 @@
-<div class="canvas-container" style="border: 1px solid white;">
-    <canvas id="canvas" class="canvas" (pointerdown)="mouseDown($event)" (pointerup)="mouseUp($event)" (wheel)="onWheelScroll($event)">
+<div class="canvas-container">
+    <!-- <canvas id="canvas" class="canvas" (pointerdown)="mouseDown($event)" (pointerup)="mouseUp($event)" (wheel)="onWheelScroll($event)"> -->
+    <canvas id="canvas" class="canvas" (wheel)="onWheelScroll($event)">
         Your browser does not support the canvas tag.
     </canvas>
 </div>

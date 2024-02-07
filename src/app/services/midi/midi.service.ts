@@ -1,9 +1,10 @@
 import { Injectable } from "@angular/core";
-import { AnyMetaEvent, MidiFile, SetTempoEvent, TimeSignatureEvent, TrackNameEvent, read } from "midifile-ts";
-import { MidiTrack } from "./MidiTrack";
+import { AnyMetaEvent, MidiFile, NoteOffEvent, SetTempoEvent, TimeSignatureEvent, TrackNameEvent, read } from "midifile-ts";
+import { MidiEvent, MidiTrack } from "./MidiTrack";
 import { Subject } from "rxjs";
 
 // https://github.com/ryohey/midifile-ts
+// https://www.music.mcgill.ca/~ich/classes/mumt306/midiformat.pdf
 
 @Injectable({
     providedIn: "root"
@@ -23,15 +24,6 @@ export class MidiService {
 
     private _title: string = "";
     get title() { return this._title; }
-
-    private _timeSigNumerator: number = 4;
-    get timeSigNumerator(): number { return this._timeSigNumerator; }
-
-    private _timeSigDenominator: number = 4;
-    get timeSigDenominator(): number { return this._timeSigDenominator; }
-
-    private _tempo: number = 120;
-    get tempo(): number { return this._tempo; }
 
     private _tracks: MidiTrack[] = [];
     get tracks(): MidiTrack[] { return this._tracks; }
@@ -74,15 +66,62 @@ export class MidiService {
     }
     zoomChange: Subject<number> = new Subject<number>();
 
+    private _midiMetadata: MidiMetadata[] = [];
+    private _lastNoteOffEvent: MidiEvent | null = null;
+
     constructor() {
     }
 
     private reset(): void {
         this._tracks = [];
         this._title = "";
-        this._timeSigNumerator = 4;
-        this._timeSigDenominator = 4;
-        this._tempo = 120;
+        this._midiMetadata = [];
+        this._lastNoteOffEvent = null;
+    }
+
+    getTempo(bar: number): number {
+        return this.getMetdataNode(bar).bpm;
+    }
+
+    getTimeSignatureNumerator(bar: number): number {
+        return this.getMetdataNode(bar).timeSigNumerator;
+    }
+
+    getTimeSignatureDenominator(bar: number): number {
+        return this.getMetdataNode(bar).timeSigDenominator;
+    }
+
+    getTotalBeats(): number {
+        if (this._lastNoteOffEvent === null) {
+            for (let track of this._tracks) {
+                for (let i = track.events.length - 1; i >= 0; i--) {
+                    let midiEvent = track.events[i];
+                    if (midiEvent.event as NoteOffEvent !== null &&
+                        (this._lastNoteOffEvent == null || midiEvent.globalTime >= this._lastNoteOffEvent.globalTime)) {
+                        this._lastNoteOffEvent = midiEvent;
+                        break;
+                    }
+                }
+            }
+        }
+
+        const beats = this._lastNoteOffEvent!.globalTime / this._midiFile!.header.ticksPerBeat;
+
+        return beats;
+    }
+
+    private getMetdataNode(bar: number): MidiMetadata {
+        let i = 0;
+
+        if (this._midiMetadata.length > 1) {
+            for (; i + 1 < this._midiMetadata.length; i++) {
+                if (bar < this._midiMetadata[i + 1].barNumber) {
+                    break;
+                }
+            }
+        }        
+
+        return this._midiMetadata[i];
     }
 
     async loadMidiFileAsync(file: File): Promise<void> {
@@ -116,7 +155,18 @@ export class MidiService {
     }
 
     private getMetaData(midi: MidiFile): void {
+        // let time: number = 0;
+        let metadata: MidiMetadata = new MidiMetadata(1);
+
         for (let event of midi.tracks[0]) {
+            if (event.deltaTime > 0) {
+                // time += event.deltaTime;
+                this._midiMetadata.push(metadata);
+                const beats = event.deltaTime / midi.header.ticksPerBeat;
+                const bars = beats / metadata.timeSigNumerator;
+                metadata = new MidiMetadata(metadata.barNumber + bars, metadata);
+            }
+
             if (event.type == "meta") {
                 let meta = event as AnyMetaEvent;
                 switch (meta.subtype) {
@@ -124,15 +174,37 @@ export class MidiService {
                         this._title = (meta as TrackNameEvent).text;
                         break;
                     case "setTempo":
-                        this._tempo = Math.round(60000000 / (meta as SetTempoEvent).microsecondsPerBeat);
+                        metadata.tempo = (meta as SetTempoEvent).microsecondsPerBeat;
+                        metadata.bpm = Math.round(60000000 / metadata.tempo);
                         break;
                     case "timeSignature":
                         let sig = meta as TimeSignatureEvent;
-                        this._timeSigNumerator = sig.numerator
-                        this._timeSigDenominator = Math.pow(2, sig.denominator);
+                        metadata.timeSigNumerator = sig.numerator
+                        metadata.timeSigDenominator = Math.pow(2, sig.denominator);
                         break;
                 }
             }
+        }
+
+        this._midiMetadata.push(metadata);
+    }
+}
+
+class MidiMetadata {
+    barNumber: number;
+    deltaTime: number = 0;
+    timeSigNumerator: number = 4;
+    timeSigDenominator: number = 4;
+    tempo: number = 0;
+    bpm: number = 120;
+
+    constructor(barNumber: number, prev: MidiMetadata | null = null) {
+        this.barNumber = barNumber;
+
+        if (prev != null) {
+            this.timeSigNumerator = prev.timeSigNumerator;
+            this.timeSigDenominator = prev.timeSigDenominator;
+            this.tempo = prev.tempo;
         }
     }
 }

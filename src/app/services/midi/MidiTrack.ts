@@ -4,7 +4,7 @@ import { Subject } from "rxjs";
 
 export class MidiTrack {
     readonly name: string = "";
-    readonly events: AnyEvent[];
+    readonly events: MidiEvent[] = [];
 
     private _color: Color = Color("white");
     public get color(): string { return this._color.hex(); }
@@ -28,7 +28,12 @@ export class MidiTrack {
     trackVisibilityChange: Subject<MidiTrack> = new Subject<MidiTrack>();
 
     constructor(events: AnyEvent[]) {
-        this.events = events;
+        let time = 0;
+
+        events.forEach(x => {
+            time += x.deltaTime;
+            this.events.push(new MidiEvent(x, time));
+        });
 
         for (let event of events) {
             let trackName = event as TrackNameEvent;
@@ -38,5 +43,15 @@ export class MidiTrack {
                 break;
             }
         }
+    }
+}
+
+export class MidiEvent {
+    readonly event: AnyEvent;
+    readonly globalTime: number;
+
+    constructor(event: AnyEvent, globalTime: number) {
+        this.event = event;
+        this.globalTime = globalTime;
     }
 }

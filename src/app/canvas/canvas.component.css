@@ -1,10 +1,10 @@
 .canvas-container {
-    overflow: hidden;
+    overflow: auto;
     max-height: 864px;
+    border: 1px solid gray;
 }
 
 .canvas {
     transform-origin: top left;
     height: 864px;
-    cursor: grab;
 }

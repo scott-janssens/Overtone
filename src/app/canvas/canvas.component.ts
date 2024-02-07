@@ -7,6 +7,7 @@ import Color from "color";
 
 const trackDrawHeight: number = 9;
 let quarterNoteWidth: number = trackDrawHeight * 4;
+let beatPos: number = 0;
 
 @Component({
     selector: "ot-canvas",
@@ -24,15 +25,17 @@ export class CanvasComponent implements OnInit {
     private _whiteKey: string = "#04242e";
     private _blackKey: string = "#000000";
     private readonly _trackCount = 96;
-    private _lastWheelEvent: WheelEvent | null = null;
 
-    private _lastMouseX: number = -1;
-    private _lastMouseY: number = -1;
+    // private _lastMouseX: number = -1;
+    // private _lastMouseY: number = -1;
     private _translateX: number = 0;
     private _translateY: number = 0;
 
+    private _lastVirtualWidth: number = 0;
+    private _lastVirtualHeight: number = 0;
     private get zoom(): number { return this._midiService.zoom; }
-    private set zoom(value: number) { this._midiService.zoom = value;}
+    private set zoom(value: number) { this._midiService.zoom = value; }
+    private _lastWheelEvent: WheelEvent | null = null;
 
     constructor(private _midiService: MidiService) {
         _midiService.zoomChange.subscribe(v => this.performZoom(v));
@@ -46,9 +49,7 @@ export class CanvasComponent implements OnInit {
             throw new Error("no id 'canvas' found.");
         }
 
-        this._trackDrawWidth = this._canvas.parentElement?.offsetWidth!;
-        this._canvas.width = this._trackDrawWidth;
-        this._canvas.height = this._trackDrawHeight * this._trackCount;
+        this._canvas.height = 864;
         this._ctx = this._canvas.getContext("2d")!;
         this._midiService.midiFileLoaded.subscribe(e => this.onFileLoaded(e, this));
         this._midiService.showHeatMapChange.subscribe(e => this.redraw());
@@ -61,6 +62,9 @@ export class CanvasComponent implements OnInit {
             midiService.tracks[i].colorChange.subscribe(e => this.redraw());
         }
 
+        beatPos = quarterNoteWidth / midiService.midiFile!.header.ticksPerBeat;
+        this._trackDrawWidth = comp._canvas!.width = midiService.getTotalBeats() * quarterNoteWidth;
+
         comp.redraw();
     }
 
@@ -70,33 +74,30 @@ export class CanvasComponent implements OnInit {
         this._lastWheelEvent = null;
     }
 
-    mouseDown(event: PointerEvent) {
-        this._lastMouseX = event.clientX;
-        this._lastMouseY = event.clientY;
-        this._canvas!.setPointerCapture(event.pointerId);
-        this._canvas!.onpointermove = e => this.mouseMove(e, this);
-        this._canvas!.style.cursor = "grabbing";
-    }
+    // mouseDown(event: PointerEvent) {
+    //     this._lastMouseX = event.clientX;
+    //     this._lastMouseY = event.clientY;
+    //     this._canvas!.setPointerCapture(event.pointerId);
+    //     this._canvas!.onpointermove = e => this.mouseMove(e, this);
+    //     this._canvas!.style.cursor = "grabbing";
+    // }
 
-    mouseUp(event: PointerEvent) {
-        this._canvas!.releasePointerCapture(event.pointerId);
-        this._canvas!.onpointermove = null;
-        this._canvas!.style.cursor = "grab";
-    }
+    // mouseUp(event: PointerEvent) {
+    //     this._canvas!.releasePointerCapture(event.pointerId);
+    //     this._canvas!.onpointermove = null;
+    //     this._canvas!.style.cursor = "grab";
+    // }
 
-    mouseMove(event: PointerEvent, comp: CanvasComponent) {
-        comp._translateX += event.clientX - comp._lastMouseX;
-        comp._translateY += event.clientY - comp._lastMouseY;
+    // mouseMove(event: PointerEvent, comp: CanvasComponent) {
+    //     comp._translateX += event.clientX - comp._lastMouseX;
+    //     comp._translateY += event.clientY - comp._lastMouseY;
 
-        comp.validateTranslation();
+    //     comp.validateTranslation();
 
-        comp._lastMouseX = event.clientX;
-        comp._lastMouseY = event.clientY;
-        comp._canvas!.style.transform = "translate(" + comp._translateX + "px," + comp._translateY + "px) scale(" + comp.zoom + "," + comp.zoom + ")";
-    }
-
-    private _lastVirtualWidth: number = 0;
-    private _lastVirtualHeight: number = 0;
+    //     comp._lastMouseX = event.clientX;
+    //     comp._lastMouseY = event.clientY;
+    //     comp._canvas!.style.transform = "translate(" + comp._translateX + "px," + comp._translateY + "px) scale(" + comp.zoom + "," + comp.zoom + ")";
+    // }
 
     private performZoom(newZoom: number): void {
         let x: number;
@@ -107,10 +108,10 @@ export class CanvasComponent implements OnInit {
             y = this._lastWheelEvent.clientY;
         }
         else {
-            x =  this._canvas!.clientWidth / 2;
+            x = this._canvas!.clientWidth / 2;
             y = this._canvas!.clientHeight / 2
         }
-        
+
         const oldTransX = this._translateX;
         const pctX = (x - this._translateX) / this._lastVirtualWidth;
         const newVirtualWidth = this._canvas!.offsetWidth * this.zoom;
@@ -153,7 +154,7 @@ export class CanvasComponent implements OnInit {
         this.drawBackground();
         this.drawBarLines();
 
-        for (let i = 1; i < this._midiService.tracks.length; i++) {
+        for (let i = 0; i < this._midiService.tracks.length; i++) {
             this.drawMidiTrack(this._midiService.tracks[i]);
         }
     }
@@ -162,32 +163,30 @@ export class CanvasComponent implements OnInit {
         if (this._ctx == null) { throw new Error("Canvas context not set."); }
 
         if (track.isTrackVisible) {
-            let time = 0;
             let notes: { [Key: number]: Note | null } = {};
 
             this._ctx.fillStyle = track.color;
 
             for (let event of track.events) {
-                if (event.type == "channel") {
-                    switch (event.subtype) {
+                if (event.event.type == "channel") {
+                    switch (event.event.subtype) {
                         case "noteOn":
-                            if (notes[event.noteNumber] == null) {
-                                notes[event.noteNumber] = new Note(time + event.deltaTime, event.noteNumber, event.velocity);
+                            if (notes[event.event.noteNumber] == null) {
+                                notes[event.event.noteNumber] = new Note(event.globalTime, event.event.noteNumber, event.event.velocity);
                             }
                             break;
                         case "noteOff":
-                            let note = notes[event.noteNumber];
+                            let note = notes[event.event.noteNumber];
                             if (note != null) {
-                                this._ctx.fillRect(note.x + 2 * this._trackDrawHeight + 1, note.y, quarterNoteWidth - 1, this._trackDrawHeight - 2);
-                                notes[event.noteNumber] = null;
-                                this.drawOvertones(event.noteNumber, note.x + 2 * this._trackDrawHeight + 1, quarterNoteWidth, track.color);
+                                let width = (event.globalTime - note.start) * beatPos;
+                                this._ctx.fillRect(note.x + 2 * this._trackDrawHeight + 1, note.y, width, this._trackDrawHeight - 2);
+                                notes[event.event.noteNumber] = null;
+                                this.drawOvertones(event.event.noteNumber, note.x + 2 * this._trackDrawHeight + 1, width, track.color);
                             }
                             break;
                         case "controller":
                             break;
                     }
-
-                    time += event.deltaTime;
                 }
             }
         }
@@ -236,11 +235,11 @@ export class CanvasComponent implements OnInit {
     private drawBarLines(): void {
         if (this._ctx == null) { throw new Error("Canvas context not set."); }
 
-        let barWidth = quarterNoteWidth * this._midiService.timeSigNumerator;
         this._ctx.strokeStyle = "black";
         this._ctx.lineWidth = 1;
+        let bar = 2;
 
-        for (let i = 2 * this._trackDrawHeight; i < this._trackDrawWidth; i += barWidth) {
+        for (let i = 2 * this._trackDrawHeight + quarterNoteWidth * this._midiService.getTimeSignatureNumerator(1); i < this._trackDrawWidth; i += quarterNoteWidth * this._midiService.getTimeSignatureNumerator(bar++)) {
             this._ctx.beginPath();
             this._ctx.moveTo(i, 0);
             this._ctx.lineTo(i, this._trackDrawHeight * this._trackCount);
@@ -332,7 +331,7 @@ class Note {
         this.start = start;
         this.velocity = velocity;
         this.noteNumber = noteNumber;
-        this.x = quarterNoteWidth * (start / 240);
+        this.x = beatPos * start;
         this.y = (107 - noteNumber) * trackDrawHeight;
     }
 }

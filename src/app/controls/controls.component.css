@@ -1,7 +1,32 @@
+/* @use '@angular/material' as mat;  SASS*/
+
 label {
     cursor: pointer;
 }
 
+mat-list-item {
+    padding: 0 !important;
+}
+
 mat-slider {
     width: 300px;
+}
+
+.controls-container {
+    display: grid;
+    grid-template-rows: auto 154px;
+    height: 903px;
+    /* @include mat.all-component-densities(-1); */
+}
+
+.list-container {
+    overflow: auto;
+    scrollbar-color: gray #02141e;
+    scrollbar-width: thin;
+    border: 1px solid gray;
+}
+
+.controls {
+    margin-top: 1px;
+    border: 1px solid gray;    
 }

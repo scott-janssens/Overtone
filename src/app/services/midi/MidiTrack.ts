@@ -1,9 +1,12 @@
 import Color from "color";
-import { AnyEvent, TrackNameEvent } from "midifile-ts";
+import { AnyEvent, ChannelEvent, MetaEvent, ProgramChangeEvent, TrackNameEvent } from "midifile-ts";
 import { Subject } from "rxjs";
+import { ProgramChanges } from "./ProgramChanges";
 
 export class MidiTrack {
     readonly name: string = "";
+    readonly insturment: string | undefined;
+    readonly percussion: string | undefined;
     readonly events: MidiEvent[] = [];
 
     private _color: Color = Color("white");
@@ -36,10 +39,15 @@ export class MidiTrack {
         });
 
         for (let event of events) {
-            let trackName = event as TrackNameEvent;
+            if (event.type == "meta") {
+                this.name = (event as TrackNameEvent)!.text;
+            }
+            else if (event.type === "channel" && event.subtype === "programChange") {
+                let programChange = (event as ProgramChangeEvent).value;
+                this.insturment = ProgramChanges.get(programChange).instrument;
+            }
 
-            if (trackName != null) {
-                this.name = trackName.text;
+            if (this.name !== "" && this.insturment !== undefined) {
                 break;
             }
         }

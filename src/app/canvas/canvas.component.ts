@@ -294,8 +294,8 @@ export class CanvasComponent implements OnInit {
             this._barsCtx.moveTo(i, 0);
             this._barsCtx.lineTo(i, 2 * this._trackDrawHeight);
             this._barsCtx.stroke();
-            this._barsCtx.fillText(String(bar), i + width / 2, font, width);
-            width = quarterNoteWidth * this._midiService.getTimeSignatureNumerator(++bar) * this.zoom;
+            width = quarterNoteWidth * this._midiService.getTimeSignatureNumerator(bar) * this.zoom;
+            this._barsCtx.fillText(String(bar++), i + width / 2, font, width);
         }
     }
 

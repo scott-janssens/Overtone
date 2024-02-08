@@ -72,7 +72,7 @@ export class CanvasComponent implements OnInit {
     }
 
     public onFileLoaded(midiService: MidiService, comp: CanvasComponent): void {
-        for (let i = 1; i < midiService.tracks.length; i++) {
+        for (let i = 0; i < midiService.tracks.length; i++) {
             midiService.tracks[i].trackVisibilityChange.subscribe(e => this.redraw());
             midiService.tracks[i].colorChange.subscribe(e => this.redraw());
         }

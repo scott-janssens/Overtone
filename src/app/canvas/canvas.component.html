@@ -1,6 +1,14 @@
-<div class="canvas-container">
-    <!-- <canvas id="canvas" class="canvas" (pointerdown)="mouseDown($event)" (pointerup)="mouseUp($event)" (wheel)="onWheelScroll($event)"> -->
-    <canvas id="canvas" class="canvas" (wheel)="onWheelScroll($event)">
-        Your browser does not support the canvas tag.
-    </canvas>
+<div class="canvas-root">
+    <div id="pitches-container">
+        <div class="canvas-corner" *ngIf="_midiService.midiFile != undefined"></div>
+        <canvas id="pitches" class="pitches"></canvas>
+    </div>
+    <div id="canvas-container" class="canvas-container" (scroll)="onCanvasScroll($event)">
+        <div class="bars-container">
+            <canvas id="bars" class="bars"></canvas>
+        </div>
+        <canvas id="canvas" class="canvas" (wheel)="onWheelScroll($event)">
+            Your browser does not support the canvas tag.
+        </canvas>
+    </div>
 </div>

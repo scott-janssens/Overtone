@@ -1,6 +1,6 @@
-import { Component, forwardRef } from "@angular/core";
+import { Component } from "@angular/core";
 import { CommonModule } from '@angular/common';
-import { FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { LoadMidiFileComponent } from "../file/load-midi-file.component";
 import { MatList, MatListItem } from '@angular/material/list';
 import { MatSliderModule } from '@angular/material/slider';

@@ -1,5 +1,5 @@
 import { Component, OnInit } from "@angular/core";
-import { CommonModule } from '@angular/common';  
+import { CommonModule } from '@angular/common';
 import { OvertoneSequence } from "../../overtone/OvertoneSequence";
 import { Pitch } from "../../overtone/Pitch";
 import { MidiService } from "../services/midi/midi.service";
@@ -37,14 +37,20 @@ export class CanvasComponent implements OnInit {
     private _lastVirtualHeight: number = 0;
     private get zoom(): number { return this._midiService.zoom; }
     private set zoom(value: number) { this._midiService.zoom = value; }
-    private _lastWheelEvent: WheelEvent | null = null;    
+    private _lastWheelEvent: WheelEvent | null = null;
 
     constructor(protected _midiService: MidiService) {
         _midiService.zoomChange.subscribe(v => this.performZoom(v));
     }
 
+    windowWheelHandler(e: Event): void {
+        if ((e?.target as HTMLCanvasElement)?.id == "canvas") {
+            e.preventDefault();
+        }
+    }
+
     ngOnInit(): void {
-        window.addEventListener("wheel", e => e.preventDefault(), { passive: false })
+        window.addEventListener("wheel", this.windowWheelHandler, { passive: false })
 
         this._pitchesContainer = document.getElementById("pitches-container") as HTMLDivElement;
         this._container = document.getElementById("canvas-container") as HTMLDivElement;

@@ -1,4 +1,40 @@
+.track-container {
+    display: grid;
+    grid-template-columns: 40px auto 100px 22px;
+    grid-template-rows: auto auto;
+    background-color: #2f2f2f;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.program-select {
+    grid-column: 2;
+    font-size: small;
+}
+
+.track-check {
+    grid-row: span 2;
+}
+
+.track-name {
+    grid-column: span 2;
+    font-family: Roboto, sans-serif;
+    font-weight: 300;
+}
+
 .color-picker-display {
+    grid-row: span 2;
     width: 1em;
     right: 0;
+}
+
+.program-type {
+    margin: 0;
+    font-family: Roboto, sans-serif;
+    font-weight: 100;
+    font-size: small;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

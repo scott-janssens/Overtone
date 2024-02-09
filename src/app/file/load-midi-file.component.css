@@ -1,11 +1,25 @@
+.file-upload {
+  display: flex;
+}
+
 .file-input {
   display: none;
 }
 
-.upload-btn {
-  /* background-color: transparent; */
-  /* color: transparent; */
+.filename {
+  margin: 0;
+  font-family: Roboto, sans-serif;
+  font-weight: 100;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-wrap: nowrap;
 }
+
+/* 
+.upload-btn {
+  background-color: transparent;
+  color: transparent;
+} */
 
 .icon {
   /* background-color: black; */

@@ -88,7 +88,7 @@ export class ProgramChanges {
         new ProgramChange(69, "English horn", "Reed"),
         new ProgramChange(70, "Bassoon", "Reed"),
         new ProgramChange(71, "Clarinet", "Reed"),
-        new ProgramChange(72, "Piccolo", ""),
+        new ProgramChange(72, "Piccolo", "Pipe"),
         new ProgramChange(73, "Flute", "Pipe"),
         new ProgramChange(74, "Recorder", "Pipe"),
         new ProgramChange(75, "Pan flute", "Pipe"),

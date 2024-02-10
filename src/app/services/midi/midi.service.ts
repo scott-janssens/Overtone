@@ -157,15 +157,13 @@ export class MidiService {
     }
 
     private getMetaData(midi: MidiFile): void {
-        // let time: number = 0;
         let metadata: MidiMetadata = new MidiMetadata(1);
 
         for (let event of midi.tracks[0]) {
             if (event.deltaTime > 0) {
-                // time += event.deltaTime;
                 this._midiMetadata.push(metadata);
                 const beats = event.deltaTime / midi.header.ticksPerBeat;
-                const bars = beats / metadata.timeSigNumerator;
+                const bars = beats / metadata.timeSigNumerator * metadata.timeSigDenominator / 4;
                 metadata = new MidiMetadata(metadata.barNumber + bars, metadata);
             }
 
@@ -182,7 +180,7 @@ export class MidiService {
                     case "timeSignature":
                         let sig = meta as TimeSignatureEvent;
                         metadata.timeSigNumerator = sig.numerator
-                        metadata.timeSigDenominator = Math.pow(2, sig.denominator);
+                        metadata.timeSigDenominator = sig.denominator;
                         break;
                 }
             }

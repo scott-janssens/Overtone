@@ -299,7 +299,9 @@ export class CanvasComponent implements OnInit {
 
         let bar = 1;
 
-        for (let i = quarterNoteWidth * this._midiService.getTimeSignatureNumerator(1); i < this._trackDrawWidth; i += quarterNoteWidth * this._midiService.getTimeSignatureNumerator(++bar)) {
+        for (let i = quarterNoteWidth * this._midiService.getTimeSignatureNumerator(1) * 4 / this._midiService.getTimeSignatureDenominator(1);
+             i < this._trackDrawWidth;
+             bar++, i += quarterNoteWidth * this._midiService.getTimeSignatureNumerator(bar) * 4 / this._midiService.getTimeSignatureDenominator(bar)) {
             this._canvasCtx.beginPath();
             this._canvasCtx.moveTo(i, 0);
             this._canvasCtx.lineTo(i, this._trackDrawHeight * this._trackCount);
@@ -308,7 +310,7 @@ export class CanvasComponent implements OnInit {
     }
 
     private drawBackground(): void {
-        if (this._canvasCtx == null /*|| this._pitchesCtx == null*/) { throw new Error("Canvas context not set."); }
+        if (this._canvasCtx == null) { throw new Error("Canvas context not set."); }
 
         this._canvasCtx.strokeStyle = this._blackKey;
 
@@ -365,7 +367,7 @@ export class CanvasComponent implements OnInit {
         this._barsCtx.textAlign = "center";
 
         let bar = 1;
-        let width = quarterNoteWidth * this._midiService.getTimeSignatureNumerator(1) * this.zoom;
+        let width = quarterNoteWidth * this._midiService.getTimeSignatureNumerator(1) * 4 / this._midiService.getTimeSignatureDenominator(1) * this.zoom;
         let i = 0;
 
         for (; i < this._bars!.width; i += width) {
@@ -373,7 +375,7 @@ export class CanvasComponent implements OnInit {
             this._barsCtx.moveTo(i, 0);
             this._barsCtx.lineTo(i, 2 * this._trackDrawHeight);
             this._barsCtx.stroke();
-            width = quarterNoteWidth * this._midiService.getTimeSignatureNumerator(bar) * this.zoom;
+            width = quarterNoteWidth * this._midiService.getTimeSignatureNumerator(bar) * 4 / this._midiService.getTimeSignatureDenominator(bar) * this.zoom;
             this._barsCtx.fillText(String(bar++), i + width / 2, font, width);
         }
     }

@@ -40,6 +40,26 @@ export class MidiService {
     }
     showHeatMapChange: Subject<boolean> = new Subject<boolean>();
 
+    private _drawBackground: boolean = true;
+    get drawBackground(): boolean { return this._drawBackground }
+    set drawBackground(value: boolean) {
+        if (this._drawBackground != value) {
+            this._drawBackground = value;
+            this.drawBackgroundChange.next(value);
+        }
+    }
+    drawBackgroundChange: Subject<boolean> = new Subject<boolean>();
+
+    private _monochrome: boolean = false;
+    get monochrome(): boolean { return this._monochrome }
+    set monochrome(value: boolean) {
+        if (this._monochrome != value) {
+            this._monochrome = value;
+            this.drawBackgroundChange.next(value);
+        }
+    }
+    monochromeChange: Subject<boolean> = new Subject<boolean>();    
+
     private _heatMapThreshold: number = 10;
     get heatMapThreshold(): number { return this._heatMapThreshold; }
     set heatMapThreshold(value: number) {
@@ -278,7 +298,7 @@ export class MidiService {
                 map.get(key)!.push(t);
             }
         });
-        
+
         return map;
     }
 

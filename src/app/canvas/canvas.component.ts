@@ -78,6 +78,8 @@ export class CanvasComponent implements OnInit {
         this._midiService.showHeatMapChange.subscribe(e => this.redraw());
         this._midiService.heatMapThresholdChange.subscribe(e => this.redraw());
         this._midiService.tracksChange.subscribe(e => { this.trackManagement(); this.redraw() });
+        this._midiService.drawBackgroundChange.subscribe(e => this.redraw());
+        this._midiService.monochromeChange.subscribe(e => this.redraw());           
     }
 
     public onFileLoaded(midiService: MidiService, comp: CanvasComponent): void {
@@ -208,6 +210,10 @@ export class CanvasComponent implements OnInit {
     }
 
     private redraw(): void {
+        this._canvasCtx!.clearRect(0, 0, this._canvas!.width, this._canvas!.height)
+        this._pitchesCtx!.clearRect(0, 0, this._pitches!.width, this._pitches!.height)
+        this._barsCtx!.clearRect(0, 0, this._bars!.width, this._bars!.height)
+
         this.drawBackground();
         this.drawBars();
         this.drawBarTrack();
@@ -224,7 +230,7 @@ export class CanvasComponent implements OnInit {
         if (track.isTrackVisible) {
             let notes: { [Key: number]: Note | null } = {};
 
-            this._canvasCtx.fillStyle = track.color;
+            this._canvasCtx.fillStyle = this._midiService.monochrome ? "gray" : track.color;
 
             for (let event of track.events) {
                 if (event.event.type == "channel") {
@@ -253,6 +259,8 @@ export class CanvasComponent implements OnInit {
 
     private drawOvertones(midiNote: number, x: number, width: number, color: string): void {
         if (this._canvasCtx == null) { throw new Error("Canvas context not set."); }
+
+        color = this._midiService.monochrome ? "gray" : color;
 
         const sequence = new OvertoneSequence(Pitch.fromMidi(midiNote).frequency, 4068);
         const halfHeight = this._trackDrawHeight / 2;
@@ -310,6 +318,10 @@ export class CanvasComponent implements OnInit {
     }
 
     private drawBackground(): void {
+        if (!this._midiService.drawBackground) {
+            return;
+        }
+
         if (this._canvasCtx == null) { throw new Error("Canvas context not set."); }
 
         this._canvasCtx.strokeStyle = this._blackKey;

@@ -14,33 +14,35 @@
             <ng-template matMenuContent let-track="track">
                 <button mat-menu-item (click)="onMenuSelect(true)">Select All</button>
                 <button mat-menu-item (click)="onMenuSelect(false)">Select None</button>
-                <button mat-menu-item *ngIf="tracks[0] != track" (click)="onMenuMergeUp(track)">Merge into Track Above</button>
-                <button mat-menu-item *ngIf="anyTrackInstrument(track)" (click)="midiService.mergeTrackInstrument(track.program.instrument)">Merge {{track.program?.instrument}} Tracks</button>
-                <button mat-menu-item *ngIf="anyTrackInstruments()" (click)="midiService.mergeTrackInstruments()">Merge by Instruments</button>
-                <button mat-menu-item *ngIf="anyTrackTypes()" (click)="midiService.mergeTrackTypes()">Merge by Track Types</button>
-                <button mat-menu-item *ngIf="tracks.length > 1" (click)="onMenuMergeUp(track)" (click)="midiService.mergeAll()">Merge All Tracks</button>
+                <button mat-menu-item *ngIf="tracks[0] != track" (click)="onMenuMergeUp(track)">Merge into Track
+                    Above</button>
+                <button mat-menu-item *ngIf="anyTrackInstrument(track)"
+                    (click)="midiService.mergeTrackInstrument(track.program.instrument)">Merge
+                    {{track.program?.instrument}} Tracks</button>
+                <button mat-menu-item *ngIf="anyTrackInstruments()" (click)="midiService.mergeTrackInstruments()">Merge
+                    by Instruments</button>
+                <button mat-menu-item *ngIf="anyTrackTypes()" (click)="midiService.mergeTrackTypes()">Merge by Track
+                    Types</button>
+                <button mat-menu-item *ngIf="tracks.length > 1" (click)="onMenuMergeUp(track)"
+                    (click)="midiService.mergeAll()">Merge All Tracks</button>
                 <button mat-menu-item (click)="midiService.removeTrack(track)">Remove Track</button>
             </ng-template>
         </mat-menu>
     </div>
     <div class="controls">
-        <div>
-            <label>Zoom</label>
-        </div>
-        <div>
-            <mat-slider discrete min="1" max="4" step="0.025" [(ngModel)]="midiService.zoom" ngDefaultControl>
-                <input matSliderThumb [value]="midiService.zoom">
-            </mat-slider>
-        </div>
+        <label>Zoom</label>
+        <mat-slider discrete min="1" max="4" step="0.025" [(ngModel)]="midiService.zoom" ngDefaultControl>
+            <input matSliderThumb [value]="midiService.zoom">
+        </mat-slider>
         <mat-radio-group [(ngModel)]="midiService.showHeatMap">
             <mat-radio-button [value]="false">Frequencies</mat-radio-button>
             <mat-radio-button [value]="true">Heatmap</mat-radio-button>
         </mat-radio-group>
-        <div>
-            <mat-slider discrete min="0" max="50" [(ngModel)]="midiService.heatMapThreshold"
-                [disabled]="!midiService.showHeatMap" ngDefaultControl>
-                <input matSliderThumb [value]="midiService.heatMapThreshold">
-            </mat-slider>
-        </div>
+        <mat-slider discrete min="0" max="50" [(ngModel)]="midiService.heatMapThreshold"
+            [disabled]="!midiService.showHeatMap" ngDefaultControl>
+            <input matSliderThumb [value]="midiService.heatMapThreshold">
+        </mat-slider>
+        <mat-checkbox [(ngModel)]="midiService.drawBackground">Draw Background</mat-checkbox>
+        <mat-checkbox [(ngModel)]="midiService.monochrome">Draw Monochrome</mat-checkbox>
     </div>
 </div>

@@ -75,18 +75,43 @@ export class CanvasComponent implements OnInit {
         this._midiService.midiFileLoaded.subscribe(e => this.onFileLoaded(e, this));
         this._midiService.showHeatMapChange.subscribe(e => this.redraw());
         this._midiService.heatMapThresholdChange.subscribe(e => this.redraw());
+        this._midiService.tracksChange.subscribe(e => { this.trackManagement(); this.redraw() });
     }
 
     public onFileLoaded(midiService: MidiService, comp: CanvasComponent): void {
-        for (let i = 0; i < midiService.tracks.length; i++) {
-            midiService.tracks[i].trackVisibilityChange.subscribe(e => this.redraw());
-            midiService.tracks[i].colorChange.subscribe(e => this.redraw());
-        }
+       comp.trackManagement();
 
         beatPos = quarterNoteWidth / midiService.midiFile!.header.ticksPerBeat;
         this._trackDrawWidth = comp._canvas!.width = this._bars!.width = midiService.getTotalBeats() * quarterNoteWidth;
 
         comp.redraw();
+    }
+
+    private _trackSubscriptions: MidiTrack[] = [];
+
+    private trackManagement() {
+        let newSubs: MidiTrack[] = [];
+
+        for (let i = 0; i < this._midiService.tracks.length; i++) {
+            let track = this._midiService.tracks[i];
+            newSubs.push(track);
+            let subIdx = this._trackSubscriptions.indexOf(track);
+
+            if (subIdx === -1) {
+                track.trackVisibilityChange.subscribe(e => this.redraw());
+                track.colorChange.subscribe(e => this.redraw());
+            }
+            else {
+                this._trackSubscriptions.splice(subIdx, 1);
+            }
+        }
+
+        for (let track of this._trackSubscriptions) {
+            track.trackVisibilityChange.unsubscribe();
+            track.colorChange.unsubscribe();
+        }
+
+        this._trackSubscriptions = newSubs;
     }
 
     onWheelScroll(event: WheelEvent) {

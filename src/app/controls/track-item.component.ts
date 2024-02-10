@@ -19,7 +19,6 @@ export class TrackItemComponent {
   @Output() notify: EventEmitter<MidiTrack> = new EventEmitter<MidiTrack>();
 
   get programChanges(): ProgramChange[] {
-    let l = ProgramChanges.programChanges.sort((a, b) => (a.instrument > b.instrument ? 1 : -1));
-    return l;
+    return ProgramChanges.programChanges.sort((a, b) => (a.instrument > b.instrument ? 1 : -1));
   }
 }

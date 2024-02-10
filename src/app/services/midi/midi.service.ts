@@ -27,6 +27,7 @@ export class MidiService {
 
     private _tracks: MidiTrack[] = [];
     get tracks(): MidiTrack[] { return this._tracks; }
+    tracksChange: Subject<MidiService> = new Subject<MidiService>();
 
     private _showHeatMap: boolean = false;
     get showHeatMap(): boolean { return this._showHeatMap; }
@@ -119,7 +120,7 @@ export class MidiService {
                     break;
                 }
             }
-        }        
+        }
 
         return this._midiMetadata[i];
     }
@@ -187,6 +188,15 @@ export class MidiService {
         }
 
         this._midiMetadata.push(metadata);
+    }
+
+    mergeTracks(trackA: MidiTrack, trackB: MidiTrack): void {
+        const ai = this.tracks.indexOf(trackA);
+        const bi = this.tracks.indexOf(trackB);
+        const mergedTrack = trackA.Merge(trackB);
+        this.tracks.splice(ai, 1, mergedTrack);
+        this.tracks.splice(bi, 1);
+        this.tracksChange.next(this);
     }
 }
 

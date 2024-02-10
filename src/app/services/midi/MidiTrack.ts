@@ -4,8 +4,11 @@ import { Subject } from "rxjs";
 import { ProgramChange, ProgramChanges } from "./ProgramChanges";
 
 export class MidiTrack {
-    readonly name: string = "";
-    readonly events: MidiEvent[] = [];
+    private _name: string = "";
+    get name() { return this._name; }
+
+    private _events: MidiEvent[] = [];
+    get events(): MidiEvent[] { return this._events; }
 
     private _program: ProgramChange | undefined;
     public get program(): ProgramChange | undefined { return this._program; }
@@ -38,27 +41,66 @@ export class MidiTrack {
     }
     trackVisibilityChange: Subject<MidiTrack> = new Subject<MidiTrack>();
 
-    constructor(events: AnyEvent[]) {
+    constructor(events: AnyEvent[] | null = null) {
         let time = 0;
 
-        events.forEach(x => {
-            time += x.deltaTime;
-            this.events.push(new MidiEvent(x, time));
-        });
+        if (events !== null) {
+            events.forEach(x => {
+                time += x.deltaTime;
+                this.events.push(new MidiEvent(x, time));
+            });
 
-        for (let event of events) {
-            if (event.type == "meta") {
-                this.name = (event as TrackNameEvent)!.text;
-            }
-            else if (event.type === "channel" && event.subtype === "programChange") {
-                let programChange = (event as ProgramChangeEvent).value;
-                this.program = ProgramChanges.get(programChange);
-            }
+            for (let event of events) {
+                if (event.type == "meta") {
+                    this._name = (event as TrackNameEvent)!.text;
+                }
+                else if (event.type === "channel" && event.subtype === "programChange") {
+                    let programChange = (event as ProgramChangeEvent).value;
+                    this.program = ProgramChanges.get(programChange);
+                }
 
-            if (this.name !== "" && this.program !== undefined) {
-                break;
+                if (this._name !== "" && this.program !== undefined) {
+                    break;
+                }
             }
         }
+    }
+
+    Merge(track: MidiTrack): MidiTrack {
+        const newTrack = new MidiTrack();
+        newTrack._name = this._name;
+        newTrack._program = this._program;
+        newTrack._color = this._color;
+        newTrack._isTrackVisible = true;
+
+        let mergeTime = 0;
+        let thisIdx = 0;
+        let trackIdx = 0;
+
+        while (thisIdx < this.events.length || trackIdx < track.events.length) {
+            if (trackIdx >= track.events.length ||
+                this.events[thisIdx]?.globalTime <= track.events[trackIdx].globalTime) {
+                let newEvent = structuredClone(this.events[thisIdx]);
+                newEvent.event.deltaTime = this.events[thisIdx].globalTime - mergeTime;
+                newTrack.events.push(newEvent);
+                mergeTime = this.events[thisIdx].globalTime;
+                thisIdx++;
+            }
+            else {
+                if (track.events[trackIdx].event.type != "meta") {
+                    let newEvent = structuredClone(track.events[trackIdx]);
+                    newEvent.event.deltaTime = track.events[trackIdx].globalTime - mergeTime;
+                    newTrack.events.push(newEvent);
+                    mergeTime = this.events[trackIdx].globalTime;
+                    trackIdx++;
+                }
+                else {
+                    trackIdx++;
+                }
+            }
+        }
+
+        return newTrack;
     }
 }
 

@@ -3,13 +3,20 @@
 <div class="controls-container" *ngIf="midiService.midiFile != undefined">
     <div class="list-container">
         <mat-list>
-            <mat-list-item *ngFor="let track of tracks">
+            <mat-list-item *ngFor="let track of tracks" (contextmenu)="onContextMenu($event, track)">
                 <ot-track-item [track]="track"></ot-track-item>
             </mat-list-item>
-            <!-- <div *ngFor="let track of tracks">
-                <ot-track-item [track]="track"></ot-track-item>
-            </div> -->
         </mat-list>
+        <div style="visibility: hidden; position: fixed" [style.left]="contextMenuPosition.x"
+            [style.top]="contextMenuPosition.y" [matMenuTriggerFor]="contextMenu">
+        </div>
+        <mat-menu #contextMenu="matMenu">
+            <ng-template matMenuContent let-track="track">
+                <button mat-menu-item (click)="onMenuSelect(true)">Select All</button>
+                <button mat-menu-item (click)="onMenuSelect(false)">Select None</button>
+                <button mat-menu-item (click)="onMenuMergeUp(track)">Merge into Track Above</button>
+            </ng-template>l
+        </mat-menu>
     </div>
     <div class="controls">
         <div>

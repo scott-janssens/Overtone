@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, ViewChild } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LoadMidiFileComponent } from "../file/load-midi-file.component";
@@ -6,6 +6,7 @@ import { MatList, MatListItem } from '@angular/material/list';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatCheckbox } from '@angular/material/checkbox';
+import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { TrackItemComponent } from "./track-item.component";
 import { MidiService } from "../services/midi/midi.service";
 import { MidiTrack } from "../services/midi/MidiTrack";
@@ -14,12 +15,38 @@ import { MidiTrack } from "../services/midi/MidiTrack";
     selector: "ot-controls",
     templateUrl: "./controls.component.html",
     styleUrl: "./controls.component.css",
-    imports: [LoadMidiFileComponent, TrackItemComponent, MatList, MatListItem, MatSliderModule, MatRadioModule, MatCheckbox, CommonModule, FormsModule], 
+    imports: [LoadMidiFileComponent, TrackItemComponent, MatList, MatListItem, MatSliderModule, MatRadioModule, MatCheckbox, MatMenuModule, MatMenuTrigger, CommonModule, FormsModule],
     standalone: true
 })
 export class ControlsComponent {
     get tracks(): MidiTrack[] { return this.midiService.tracks; }
 
     constructor(readonly midiService: MidiService) {
+    }
+
+    @ViewChild(MatMenuTrigger) contextMenu!: MatMenuTrigger;
+
+    contextMenuPosition = { x: '0px', y: '0px' };
+
+    onContextMenu(event: MouseEvent, track: MidiTrack) {
+        event.preventDefault();
+        this.contextMenuPosition.x = event.clientX + 'px';
+        this.contextMenuPosition.y = event.clientY + 'px';
+        this.contextMenu.menuData = { track: track };
+        this.contextMenu.menu!.focusFirstItem('mouse');
+        this.contextMenu.openMenu();
+    }
+
+    onMenuSelect(select: boolean) {
+        for (let track of this.tracks) {
+            track.isTrackVisible = select;
+        }
+    }
+
+    onMenuMergeUp(track: MidiTrack) {
+        const i = this.tracks.indexOf(track);
+        if (i > 0) {
+            this.midiService.mergeTracks(this.tracks[i - 1], track);
+        }
     }
 }

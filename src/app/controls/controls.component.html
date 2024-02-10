@@ -14,8 +14,13 @@
             <ng-template matMenuContent let-track="track">
                 <button mat-menu-item (click)="onMenuSelect(true)">Select All</button>
                 <button mat-menu-item (click)="onMenuSelect(false)">Select None</button>
-                <button mat-menu-item (click)="onMenuMergeUp(track)">Merge into Track Above</button>
-            </ng-template>l
+                <button mat-menu-item *ngIf="tracks[0] != track" (click)="onMenuMergeUp(track)">Merge into Track Above</button>
+                <button mat-menu-item *ngIf="anyTrackInstrument(track)" (click)="midiService.mergeTrackInstrument(track.program.instrument)">Merge {{track.program?.instrument}} Tracks</button>
+                <button mat-menu-item *ngIf="anyTrackInstruments()" (click)="midiService.mergeTrackInstruments()">Merge by Instruments</button>
+                <button mat-menu-item *ngIf="anyTrackTypes()" (click)="midiService.mergeTrackTypes()">Merge by Track Types</button>
+                <button mat-menu-item *ngIf="tracks.length > 1" (click)="onMenuMergeUp(track)" (click)="midiService.mergeAll()">Merge All Tracks</button>
+                <button mat-menu-item (click)="midiService.removeTrack(track)">Remove Track</button>
+            </ng-template>
         </mat-menu>
     </div>
     <div class="controls">

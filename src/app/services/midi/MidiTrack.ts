@@ -4,21 +4,20 @@ import { Subject } from "rxjs";
 import { ProgramChange, ProgramChanges } from "./ProgramChanges";
 
 export class MidiTrack {
-    private _name: string = "";
-    get name() { return this._name; }
+    name: string = "";
 
     private _events: MidiEvent[] = [];
     get events(): MidiEvent[] { return this._events; }
 
     private _program: ProgramChange | undefined;
     public get program(): ProgramChange | undefined { return this._program; }
-    public set program(value: ProgramChange) {
+    public set program(value: ProgramChange | undefined) {
         if (this._program != value) {
             this._program = value;
             this.programChange.next(value);
         }
     }
-    programChange: Subject<ProgramChange> = new Subject<ProgramChange>();
+    programChange: Subject<ProgramChange | undefined> = new Subject<ProgramChange | undefined>();
 
     private _color: Color = Color("white");
     public get color(): string { return this._color.hex(); }
@@ -52,14 +51,14 @@ export class MidiTrack {
 
             for (let event of events) {
                 if (event.type == "meta") {
-                    this._name = (event as TrackNameEvent)!.text;
+                    this.name = (event as TrackNameEvent)!.text;
                 }
                 else if (event.type === "channel" && event.subtype === "programChange") {
                     let programChange = (event as ProgramChangeEvent).value;
                     this.program = ProgramChanges.get(programChange);
                 }
 
-                if (this._name !== "" && this.program !== undefined) {
+                if (this.name !== "" && this.program !== undefined) {
                     break;
                 }
             }
@@ -68,7 +67,7 @@ export class MidiTrack {
 
     Merge(track: MidiTrack): MidiTrack {
         const newTrack = new MidiTrack();
-        newTrack._name = this._name;
+        newTrack.name = this.name;
         newTrack._program = this._program;
         newTrack._color = this._color;
         newTrack._isTrackVisible = true;
@@ -91,7 +90,7 @@ export class MidiTrack {
                     let newEvent = structuredClone(track.events[trackIdx]);
                     newEvent.event.deltaTime = track.events[trackIdx].globalTime - mergeTime;
                     newTrack.events.push(newEvent);
-                    mergeTime = this.events[trackIdx].globalTime;
+                    mergeTime = track.events[trackIdx].globalTime;
                     trackIdx++;
                 }
                 else {

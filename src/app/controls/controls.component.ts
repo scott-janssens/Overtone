@@ -33,7 +33,6 @@ export class ControlsComponent {
         this.contextMenuPosition.x = event.clientX + 'px';
         this.contextMenuPosition.y = event.clientY + 'px';
         this.contextMenu.menuData = { track: track };
-        this.contextMenu.menu!.focusFirstItem('mouse');
         this.contextMenu.openMenu();
     }
 
@@ -48,5 +47,36 @@ export class ControlsComponent {
         if (i > 0) {
             this.midiService.mergeTracks(this.tracks[i - 1], track);
         }
+    }
+
+    anyTrackInstrument(track: MidiTrack): boolean {
+        if (track.program?.instrument ?? '' != '') {
+            const instrumentTracks = this.tracks.filter(x => x.program != null && x.program!.instrument === track.program!.instrument);
+            return instrumentTracks.length > 1;
+        }
+
+        return false;
+    }
+
+    anyTrackInstruments(): boolean {
+        const map = this.midiService.getTrackMap(this.tracks.filter(x => x.program?.instrument ?? "" != ""), x => x.program!.instrument);
+        for (let value of map.values()) {
+            if (value.length > 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    anyTrackTypes(): boolean {
+        const map = this.midiService.getTrackMap(this.tracks.filter(x => x.program?.type ?? "" != ""), x => x.program!.type);
+        for (let value of map.values()) {
+            if (value.length > 1) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -2,6 +2,7 @@ import { Injectable } from "@angular/core";
 import { AnyMetaEvent, MidiFile, NoteOffEvent, SetTempoEvent, TimeSignatureEvent, TrackNameEvent, read } from "midifile-ts";
 import { MidiEvent, MidiTrack } from "./MidiTrack";
 import { Subject } from "rxjs";
+import { ProgramChange } from "./ProgramChanges";
 
 // https://github.com/ryohey/midifile-ts
 // https://www.music.mcgill.ca/~ich/classes/mumt306/midiformat.pdf
@@ -191,11 +192,105 @@ export class MidiService {
     }
 
     mergeTracks(trackA: MidiTrack, trackB: MidiTrack): void {
+        this.mergeTracksInternal(trackA, trackB);
+        this.tracksChange.next(this);
+    }
+
+    private mergeTracksInternal(trackA: MidiTrack, trackB: MidiTrack): MidiTrack {
         const ai = this.tracks.indexOf(trackA);
         const bi = this.tracks.indexOf(trackB);
         const mergedTrack = trackA.Merge(trackB);
         this.tracks.splice(ai, 1, mergedTrack);
         this.tracks.splice(bi, 1);
+
+        return mergedTrack;
+    }
+
+    mergeTrackInstrument(instrument: string): void {
+        const iTracks = this.tracks.filter(x => x.program?.instrument === instrument);
+        this.mergeTrackArray(iTracks);
+        this.tracksChange.next(this);
+    }
+
+    mergeTrackArray(trackArray: MidiTrack[]): MidiTrack | null {
+        let merged: MidiTrack | null = null;
+
+        if (trackArray.length > 1) {
+            merged = trackArray[0];
+
+            for (let i = 1; i < trackArray.length; i++) {
+                merged = this.mergeTracksInternal(merged, trackArray[i]);
+            }
+        }
+
+        return merged;
+    }
+
+    mergeTrackInstruments(): void {
+        let programmed = this.tracks.filter(x => x.program?.instrument !== "");
+        this.mergeByKey(programmed, t => t.program!.instrument);
+        this.tracksChange.next(this);
+    }
+
+    mergeTrackTypes(): void {
+        let programmed = this.tracks.filter(x => x.program != null);
+        this.mergeByKey(programmed, t => t.program!.type);
+        let c = 0;
+        this.tracks.forEach((track: MidiTrack, index: number) => {
+            if (track.program != null) {
+                track.name = track.program.type;
+                track.program = new ProgramChange(-1, "", track.program.type);
+            }
+            track.color = this._trackColors[c++ % this._trackColors.length];
+        });
+        this.tracksChange.next(this);
+    }
+
+    mergeAll(): void {
+        this.mergeByKey(this.tracks, t => "merge");
+        let track = this.tracks[0];
+
+        if (track?.program != null) {
+            track.name = "Merged";
+            track.program = new ProgramChange(-1, "", "");
+        }
+
+        this.tracksChange.next(this);
+    }
+
+    private mergeByKey(trackArray: MidiTrack[], getKey: (t: MidiTrack) => string): void {
+        const map = this.getTrackMap(trackArray, getKey);
+
+        map.forEach((value: MidiTrack[], key: string) => {
+            if (value.length > 1) {
+                let merged = this.mergeTrackArray(value);
+                merged!.name = key;
+            }
+        });
+    }
+
+    getTrackMap(trackArray: MidiTrack[], getKey: (t: MidiTrack) => string): Map<string, MidiTrack[]> {
+        const map = new Map<string, MidiTrack[]>();
+        trackArray.forEach(t => {
+            const key = getKey(t);
+            if (!map.has(key)) {
+                map.set(key, [t]);
+            }
+            else {
+                map.get(key)!.push(t);
+            }
+        });
+        
+        return map;
+    }
+
+    removeTrack(track: MidiTrack) {
+        const i = this.tracks.indexOf(track);
+
+        if (i >= 0) {
+            this.tracks.splice(i, 1);
+        }
+
         this.tracksChange.next(this);
     }
 }

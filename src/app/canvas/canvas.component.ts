@@ -38,6 +38,8 @@ export class CanvasComponent implements OnInit {
     private get zoom(): number { return this._midiService.zoom; }
     private set zoom(value: number) { this._midiService.zoom = value; }
     private _lastWheelEvent: WheelEvent | null = null;
+    private _lastMouseX: number = -1;
+    private _lastMouseY: number = -1;
 
     constructor(protected _midiService: MidiService) {
         _midiService.zoomChange.subscribe(v => this.performZoom(v));
@@ -79,7 +81,7 @@ export class CanvasComponent implements OnInit {
     }
 
     public onFileLoaded(midiService: MidiService, comp: CanvasComponent): void {
-       comp.trackManagement();
+        comp.trackManagement();
 
         beatPos = quarterNoteWidth / midiService.midiFile!.header.ticksPerBeat;
         this._trackDrawWidth = comp._canvas!.width = this._bars!.width = midiService.getTotalBeats() * quarterNoteWidth;
@@ -119,9 +121,55 @@ export class CanvasComponent implements OnInit {
         this.zoom += 0.00025 * event.deltaY;
         this._lastWheelEvent = null;
     }
-
+    
     onCanvasScroll(event: Event): void {
         this._pitchesContainer!.style.transform = "translate(0px," + -(<HTMLDivElement>event.target).scrollTop + "px)";
+    }
+
+    mouseDown(event: PointerEvent) {
+        this._lastMouseX = event.clientX;
+        this._lastMouseY = event.clientY;
+        this._canvas!.setPointerCapture(event.pointerId);
+        this._canvas!.onpointermove = e => this.mouseMove(e, this);
+        this._canvas!.style.cursor = "grabbing";
+    }
+
+    mouseUp(event: PointerEvent) {
+        this._canvas!.releasePointerCapture(event.pointerId);
+        this._canvas!.onpointermove = null;
+        this._canvas!.style.cursor = "grab";
+    }
+
+    mouseMove(event: PointerEvent, comp: CanvasComponent) {
+        comp._container!.scrollLeft -= event.clientX - comp._lastMouseX;
+        comp._container!.scrollTop -= event.clientY - comp._lastMouseY;
+
+        comp._lastMouseX = event.clientX;
+        comp._lastMouseY = event.clientY;
+    }
+
+    private validateTranslation(): void {
+        if (this._container!.scrollLeft > 0) {
+            this._container!.scrollLeft = 0;
+        }
+        else {
+            const minX = this._canvas!.width - this._canvas!.width * this.zoom;
+            if (this._container!.scrollLeft < minX) {
+                this._container!.scrollLeft = minX;
+            }
+        }
+
+        if (this._container!.scrollTop > 0) {
+            this._container!.scrollTop = 0;
+        }
+        else {
+            const minY = this._canvas!.height - this._canvas!.height * this.zoom;
+            if (this._container!.scrollTop < minY) {
+                this._container!.scrollTop = minY;
+            }
+        }
+        this.drawBarTrack();
+        this.drawPitchTrack();
     }
 
     private performZoom(newZoom: number): void {

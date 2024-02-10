@@ -1,5 +1,5 @@
-<h2>{{midiService.title}}</h2>
 <ot-file></ot-file>
+<h2 *ngIf="midiService.title.length > 0">{{midiService.title}}</h2>
 <div class="controls-container" *ngIf="midiService.midiFile != undefined">
     <div class="list-container">
         <mat-list>

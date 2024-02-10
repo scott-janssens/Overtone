@@ -1,4 +1,4 @@
-<input type="file" accept=".mid" class="file-input" (change)="onLoad($event)" #fileUpload>
+<input id="file-input" type="file" accept=".mid, .midi" class="file-input" (change)="onLoad($event)" #fileUpload>
 <div class="file-upload">
     <button color="primary" class="upload-btn" (click)="fileUpload.click()">
         <mat-icon class="icon">cloud_upload</mat-icon>

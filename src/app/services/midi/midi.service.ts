@@ -30,15 +30,15 @@ export class MidiService {
     get tracks(): MidiTrack[] { return this._tracks; }
     tracksChange: Subject<MidiService> = new Subject<MidiService>();
 
-    private _showHeatMap: boolean = false;
-    get showHeatMap(): boolean { return this._showHeatMap; }
-    set showHeatMap(value: boolean) {
-        if (this._showHeatMap != value) {
-            this._showHeatMap = value;
-            this.showHeatMapChange.next(value);
+    private _display: Display = Display.Frequency;
+    get display(): Display { return this._display; }
+    set display(value: Display) {
+        if (this._display != value) {
+            this._display = value;
+            this.displayChange.next(value);
         }
     }
-    showHeatMapChange: Subject<boolean> = new Subject<boolean>();
+    displayChange: Subject<Display> = new Subject<Display>();
 
     private _drawBackground: boolean = true;
     get drawBackground(): boolean { return this._drawBackground }
@@ -330,4 +330,10 @@ class MidiMetadata {
             this.tempo = prev.tempo;
         }
     }
+}
+
+export enum Display {
+    Frequency = 1,
+    CentsOffset,
+    Chord
 }

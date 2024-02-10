@@ -8,7 +8,7 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { TrackItemComponent } from "./track-item.component";
-import { MidiService } from "../services/midi/midi.service";
+import { MidiService, Display } from "../services/midi/midi.service";
 import { MidiTrack } from "../services/midi/MidiTrack";
 
 @Component({
@@ -19,7 +19,9 @@ import { MidiTrack } from "../services/midi/MidiTrack";
     standalone: true
 })
 export class ControlsComponent {
+    DisplayEnum = Display;
     get tracks(): MidiTrack[] { return this.midiService.tracks; }
+    get display(): Display { return this.midiService.display; }
 
     constructor(readonly midiService: MidiService) {
     }

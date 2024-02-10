@@ -2,7 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { OvertoneSequence } from "../../overtone/OvertoneSequence";
 import { Pitch } from "../../overtone/Pitch";
-import { MidiService } from "../services/midi/midi.service";
+import { MidiService, Display } from "../services/midi/midi.service";
 import { MidiTrack } from "../services/midi/MidiTrack";
 import Color from "color";
 
@@ -75,7 +75,7 @@ export class CanvasComponent implements OnInit {
         this._barsCtx = this._bars.getContext("2d")!;
 
         this._midiService.midiFileLoaded.subscribe(e => this.onFileLoaded(e, this));
-        this._midiService.showHeatMapChange.subscribe(e => this.redraw());
+        this._midiService.displayChange.subscribe(e => this.redraw());
         this._midiService.heatMapThresholdChange.subscribe(e => this.redraw());
         this._midiService.tracksChange.subscribe(e => { this.trackManagement(); this.redraw() });
         this._midiService.drawBackgroundChange.subscribe(e => this.redraw());
@@ -270,8 +270,8 @@ export class CanvasComponent implements OnInit {
         let greenColor: Color;
         let redColor: Color;
 
-        if (this._midiService.showHeatMap) {
-            greenColor = Color("lime");
+        if (this._midiService.display == Display.CentsOffset) {
+            greenColor = this._midiService.monochrome ? Color(color) : Color("lime");
             redColor = Color("red");
         }
         else {
@@ -281,7 +281,7 @@ export class CanvasComponent implements OnInit {
         for (let i = 1; i < Math.min(15, sequence.length); i++) {
             let overtone = sequence[i];
 
-            if (this._midiService.showHeatMap) {
+            if (this._midiService.display == Display.CentsOffset) {
                 greenColor = greenColor!.darken(0.1);
                 redColor = redColor!.darken(0.15);
                 this._canvasCtx.strokeStyle = this._midiService.heatMapThreshold > Math.abs(overtone.cents) ? greenColor.hex() : redColor.hex();

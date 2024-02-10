@@ -34,14 +34,30 @@
         <mat-slider discrete min="1" max="4" step="0.025" [(ngModel)]="midiService.zoom" ngDefaultControl>
             <input matSliderThumb [value]="midiService.zoom">
         </mat-slider>
-        <mat-radio-group [(ngModel)]="midiService.showHeatMap">
-            <mat-radio-button [value]="false">Frequencies</mat-radio-button>
-            <mat-radio-button [value]="true">Heatmap</mat-radio-button>
+        <mat-radio-group [(ngModel)]="midiService.display">
+            <mat-radio-button [value]="DisplayEnum.Frequency">Frequencies</mat-radio-button>
+            <mat-radio-button [value]="DisplayEnum.CentsOffset">Cents Offset</mat-radio-button>
+            <mat-radio-button disabled="true" [value]="DisplayEnum.Chord">Chord</mat-radio-button>
         </mat-radio-group>
-        <mat-slider discrete min="0" max="50" [(ngModel)]="midiService.heatMapThreshold"
-            [disabled]="!midiService.showHeatMap" ngDefaultControl>
-            <input matSliderThumb [value]="midiService.heatMapThreshold">
-        </mat-slider>
+        <div>
+            <div *ngIf="midiService.display === DisplayEnum.Frequency">
+                <mat-slider discrete disabled="true" min="0" max="1">
+                    <input matSliderThumb [value]="0">
+                </mat-slider>
+            </div>
+            <div *ngIf="midiService.display === DisplayEnum.CentsOffset">
+                <mat-slider discrete min="0" max="50" [(ngModel)]="midiService.heatMapThreshold" ngDefaultControl>
+                    <input matSliderThumb [value]="midiService.heatMapThreshold">
+                </mat-slider>
+                <span class="slider-value">{{midiService.heatMapThreshold}}</span>
+            </div>
+            <div *ngIf="midiService.display === DisplayEnum.Chord">
+                <mat-slider discrete min="5" max="13" step="2" [(ngModel)]="midiService.heatMapThreshold" ngDefaultControl>
+                    <input matSliderThumb [value]="5">
+                </mat-slider>
+                <span class="slider-value">5</span>
+            </div>
+        </div>
         <mat-checkbox [(ngModel)]="midiService.drawBackground">Draw Background</mat-checkbox>
         <mat-checkbox [(ngModel)]="midiService.monochrome">Draw Monochrome</mat-checkbox>
     </div>

@@ -2,11 +2,18 @@
 <h2 *ngIf="midiService.title.length > 0">{{midiService.title}}</h2>
 <div class="controls-container" *ngIf="midiService.midiFile != undefined">
     <div class="list-container">
-        <mat-list>
+        <!-- <mat-list>
             <mat-list-item *ngFor="let track of tracks" (contextmenu)="onContextMenu($event, track)">
                 <ot-track-item [track]="track"></ot-track-item>
             </mat-list-item>
-        </mat-list>
+        </mat-list> -->
+        <div cdkDropList class="track-list" (cdkDropListDropped)="drop($event)">
+            @for (t of tracks; track t) {
+            <div cdkDrag (contextmenu)="onContextMenu($event, t)">
+                <ot-track-item [track]="t"></ot-track-item>
+            </div>
+            }
+        </div>
         <div style="visibility: hidden; position: fixed" [style.left]="contextMenuPosition.x"
             [style.top]="contextMenuPosition.y" [matMenuTriggerFor]="contextMenu">
         </div>
@@ -33,9 +40,12 @@
     </div>
     <div class="controls">
         <label>Zoom</label>
-        <mat-slider discrete min="1" max="4" step="0.025" [(ngModel)]="midiService.zoom" ngDefaultControl>
-            <input matSliderThumb [value]="midiService.zoom">
-        </mat-slider>
+        <div>
+            <mat-slider min="1" max="4" step="0.025" [(ngModel)]="midiService.zoom" ngDefaultControl>
+                <input matSliderThumb [value]="midiService.zoom">
+            </mat-slider>
+            <span class="slider-value">{{midiService.zoom}}</span>
+        </div>
         <mat-radio-group [(ngModel)]="midiService.display">
             <mat-radio-button [value]="DisplayEnum.Frequency">Frequencies</mat-radio-button>
             <mat-radio-button [value]="DisplayEnum.CentsOffset">Cents Offset</mat-radio-button>
@@ -43,19 +53,18 @@
         </mat-radio-group>
         <div>
             <div *ngIf="midiService.display === DisplayEnum.Frequency">
-                <mat-slider discrete disabled="true" min="0" max="1">
+                <mat-slider disabled="true" min="0" max="1">
                     <input matSliderThumb [value]="0">
                 </mat-slider>
             </div>
             <div *ngIf="midiService.display === DisplayEnum.CentsOffset">
-                <mat-slider discrete min="0" max="50" [(ngModel)]="midiService.heatMapThreshold" ngDefaultControl>
+                <mat-slider min="0" max="50" [(ngModel)]="midiService.heatMapThreshold" ngDefaultControl>
                     <input matSliderThumb [value]="midiService.heatMapThreshold">
                 </mat-slider>
                 <span class="slider-value">{{midiService.heatMapThreshold}}</span>
             </div>
             <div *ngIf="midiService.display === DisplayEnum.Chord">
-                <mat-slider discrete min="5" max="13" step="2" [(ngModel)]="midiService.heatMapThreshold"
-                    ngDefaultControl>
+                <mat-slider min="5" max="13" step="2" [(ngModel)]="midiService.heatMapThreshold" ngDefaultControl>
                     <input matSliderThumb [value]="5">
                 </mat-slider>
                 <span class="slider-value">5</span>

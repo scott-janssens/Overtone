@@ -2,13 +2,13 @@ import { Component, ViewChild } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LoadMidiFileComponent } from "../file/load-midi-file.component";
-import { MatList, MatListItem } from '@angular/material/list';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { TrackItemComponent } from "./track-item.component";
+import { CdkDragDrop, CdkDropList, CdkDrag, moveItemInArray } from '@angular/cdk/drag-drop';
 import { MidiService, Display } from "../services/midi/midi.service";
 import { MidiTrack } from "../services/midi/MidiTrack";
 
@@ -16,7 +16,7 @@ import { MidiTrack } from "../services/midi/MidiTrack";
     selector: "ot-controls",
     templateUrl: "./controls.component.html",
     styleUrl: "./controls.component.css",
-    imports: [LoadMidiFileComponent, TrackItemComponent, MatList, MatListItem, MatSliderModule, MatRadioModule, MatCheckbox, MatMenuModule, MatMenuTrigger, MatDividerModule, CommonModule, FormsModule],
+    imports: [CdkDropList, CdkDrag, LoadMidiFileComponent, TrackItemComponent, MatSliderModule, MatRadioModule, MatCheckbox, MatMenuModule, MatMenuTrigger, MatDividerModule, CommonModule, FormsModule],
     standalone: true
 })
 export class ControlsComponent {
@@ -25,6 +25,10 @@ export class ControlsComponent {
     get display(): Display { return this.midiService.display; }
 
     constructor(readonly midiService: MidiService) {
+    }
+
+    drop(event: CdkDragDrop<MidiTrack[]>) {
+        moveItemInArray(this.midiService.tracks, event.previousIndex, event.currentIndex);
     }
 
     @ViewChild(MatMenuTrigger) contextMenu!: MatMenuTrigger;

@@ -58,7 +58,7 @@ export class MidiService {
             this.drawBackgroundChange.next(value);
         }
     }
-    monochromeChange: Subject<boolean> = new Subject<boolean>();    
+    monochromeChange: Subject<boolean> = new Subject<boolean>();
 
     private _heatMapThreshold: number = 10;
     get heatMapThreshold(): number { return this._heatMapThreshold; }

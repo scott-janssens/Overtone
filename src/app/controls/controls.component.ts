@@ -7,6 +7,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { TrackItemComponent } from "./track-item.component";
 import { MidiService, Display } from "../services/midi/midi.service";
 import { MidiTrack } from "../services/midi/MidiTrack";
@@ -15,7 +16,7 @@ import { MidiTrack } from "../services/midi/MidiTrack";
     selector: "ot-controls",
     templateUrl: "./controls.component.html",
     styleUrl: "./controls.component.css",
-    imports: [LoadMidiFileComponent, TrackItemComponent, MatList, MatListItem, MatSliderModule, MatRadioModule, MatCheckbox, MatMenuModule, MatMenuTrigger, CommonModule, FormsModule],
+    imports: [LoadMidiFileComponent, TrackItemComponent, MatList, MatListItem, MatSliderModule, MatRadioModule, MatCheckbox, MatMenuModule, MatMenuTrigger, MatDividerModule, CommonModule, FormsModule],
     standalone: true
 })
 export class ControlsComponent {

@@ -14,6 +14,7 @@
             <ng-template matMenuContent let-track="track">
                 <button mat-menu-item (click)="onMenuSelect(true)">Select All</button>
                 <button mat-menu-item (click)="onMenuSelect(false)">Select None</button>
+                <mat-divider></mat-divider>
                 <button mat-menu-item *ngIf="tracks[0] != track" (click)="onMenuMergeUp(track)">Merge into Track
                     Above</button>
                 <button mat-menu-item *ngIf="anyTrackInstrument(track)"
@@ -25,6 +26,7 @@
                     Types</button>
                 <button mat-menu-item *ngIf="tracks.length > 1" (click)="onMenuMergeUp(track)"
                     (click)="midiService.mergeAll()">Merge All Tracks</button>
+                <mat-divider></mat-divider>
                 <button mat-menu-item (click)="midiService.removeTrack(track)">Remove Track</button>
             </ng-template>
         </mat-menu>
@@ -52,7 +54,8 @@
                 <span class="slider-value">{{midiService.heatMapThreshold}}</span>
             </div>
             <div *ngIf="midiService.display === DisplayEnum.Chord">
-                <mat-slider discrete min="5" max="13" step="2" [(ngModel)]="midiService.heatMapThreshold" ngDefaultControl>
+                <mat-slider discrete min="5" max="13" step="2" [(ngModel)]="midiService.heatMapThreshold"
+                    ngDefaultControl>
                     <input matSliderThumb [value]="5">
                 </mat-slider>
                 <span class="slider-value">5</span>

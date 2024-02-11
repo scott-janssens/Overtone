@@ -1,7 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { MidiService } from "../services/midi/midi.service";
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
-import { MatIcon} from '@angular/material/icon';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
     selector: "ot-file",

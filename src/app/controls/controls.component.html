@@ -1,14 +1,9 @@
 <ot-file></ot-file>
-<h2 *ngIf="midiService.title.length > 0">{{midiService.title}}</h2>
-<div class="controls-container" *ngIf="midiService.midiFile != undefined">
+<h2 *ngIf="model.title.length > 0">{{model.title}}</h2>
+<div class="controls-container" *ngIf="model.isMidiLoaded">
     <div class="list-container">
-        <!-- <mat-list>
-            <mat-list-item *ngFor="let track of tracks" (contextmenu)="onContextMenu($event, track)">
-                <ot-track-item [track]="track"></ot-track-item>
-            </mat-list-item>
-        </mat-list> -->
         <div cdkDropList class="track-list" (cdkDropListDropped)="drop($event)">
-            @for (t of tracks; track t) {
+            @for (t of model.tracks; track t) {
             <div cdkDrag (contextmenu)="onContextMenu($event, t)">
                 <ot-track-item [track]="t"></ot-track-item>
             </div>
@@ -22,55 +17,55 @@
                 <button mat-menu-item (click)="onMenuSelect(true)">Select All</button>
                 <button mat-menu-item (click)="onMenuSelect(false)">Select None</button>
                 <mat-divider></mat-divider>
-                <button mat-menu-item *ngIf="tracks[0] != track" (click)="onMenuMergeUp(track)">Merge into Track
+                <button mat-menu-item *ngIf="model.tracks[0] != track" (click)="onMenuMergeUp(track)">Merge into Track
                     Above</button>
                 <button mat-menu-item *ngIf="anyTrackInstrument(track)"
-                    (click)="midiService.mergeTrackInstrument(track.program.instrument)">Merge
+                    (click)="model.mergeTrackInstrument(track.program.instrument)">Merge
                     {{track.program?.instrument}} Tracks</button>
-                <button mat-menu-item *ngIf="anyTrackInstruments()" (click)="midiService.mergeTrackInstruments()">Merge
+                <button mat-menu-item *ngIf="anyTrackInstruments()" (click)="model.mergeTrackInstruments()">Merge
                     by Instruments</button>
-                <button mat-menu-item *ngIf="anyTrackTypes()" (click)="midiService.mergeTrackTypes()">Merge by Track
+                <button mat-menu-item *ngIf="anyTrackTypes()" (click)="model.mergeTrackTypes()">Merge by Track
                     Types</button>
-                <button mat-menu-item *ngIf="tracks.length > 1" (click)="onMenuMergeUp(track)"
-                    (click)="midiService.mergeAll()">Merge All Tracks</button>
+                <button mat-menu-item *ngIf="model.tracks.length > 1" (click)="onMenuMergeUp(track)"
+                    (click)="model.mergeAll()">Merge All Tracks</button>
                 <mat-divider></mat-divider>
-                <button mat-menu-item (click)="midiService.removeTrack(track)">Remove Track</button>
+                <button mat-menu-item (click)="model.removeTrack(track)">Remove Track</button>
             </ng-template>
         </mat-menu>
     </div>
     <div class="controls">
         <label>Zoom</label>
         <div>
-            <mat-slider min="1" max="4" step="0.025" [(ngModel)]="midiService.zoom" ngDefaultControl>
-                <input matSliderThumb [value]="midiService.zoom">
+            <mat-slider min="1" max="4" step="0.025" [(ngModel)]="model.zoomLevel" ngDefaultControl>
+                <input matSliderThumb [value]="model.zoomLevel">
             </mat-slider>
-            <span class="slider-value">{{midiService.zoom}}</span>
+            <span class="slider-value">{{model.zoomLevel}}</span>
         </div>
-        <mat-radio-group [(ngModel)]="midiService.display">
-            <mat-radio-button [value]="DisplayEnum.Frequency">Frequencies</mat-radio-button>
-            <mat-radio-button [value]="DisplayEnum.CentsOffset">Cents Offset</mat-radio-button>
-            <mat-radio-button disabled="true" [value]="DisplayEnum.Chord">Chord</mat-radio-button>
+        <mat-radio-group [(ngModel)]="model.overtoneDisplay">
+            <mat-radio-button [value]="OvertoneDisplayEnum.Frequency">Frequencies</mat-radio-button>
+            <mat-radio-button [value]="OvertoneDisplayEnum.CentsOffset">Cents Offset</mat-radio-button>
+            <mat-radio-button disabled="true" [value]="OvertoneDisplayEnum.Chord">Chord</mat-radio-button>
         </mat-radio-group>
         <div>
-            <div *ngIf="midiService.display === DisplayEnum.Frequency">
+            <div *ngIf="model.overtoneDisplay === OvertoneDisplayEnum.Frequency">
                 <mat-slider disabled="true" min="0" max="1">
                     <input matSliderThumb [value]="0">
                 </mat-slider>
             </div>
-            <div *ngIf="midiService.display === DisplayEnum.CentsOffset">
-                <mat-slider min="0" max="50" [(ngModel)]="midiService.heatMapThreshold" ngDefaultControl>
-                    <input matSliderThumb [value]="midiService.heatMapThreshold">
+            <div *ngIf="model.overtoneDisplay === OvertoneDisplayEnum.CentsOffset">
+                <mat-slider min="0" max="50" [(ngModel)]="model.centsThreshold" ngDefaultControl>
+                    <input matSliderThumb [value]="model.centsThreshold">
                 </mat-slider>
-                <span class="slider-value">{{midiService.heatMapThreshold}}</span>
+                <span class="slider-value">{{model.centsThreshold}}</span>
             </div>
-            <div *ngIf="midiService.display === DisplayEnum.Chord">
-                <mat-slider min="5" max="13" step="2" [(ngModel)]="midiService.heatMapThreshold" ngDefaultControl>
+            <div *ngIf="model.overtoneDisplay === OvertoneDisplayEnum.Chord">
+                <mat-slider min="5" max="13" step="2" [(ngModel)]="model.centsThreshold" ngDefaultControl>
                     <input matSliderThumb [value]="5">
                 </mat-slider>
                 <span class="slider-value">5</span>
             </div>
         </div>
-        <mat-checkbox [(ngModel)]="midiService.drawBackground">Draw Background</mat-checkbox>
-        <mat-checkbox [(ngModel)]="midiService.monochrome">Draw Monochrome</mat-checkbox>
+        <mat-checkbox [(ngModel)]="model.drawBackground">Draw Background</mat-checkbox>
+        <mat-checkbox [(ngModel)]="model.drawMonochrome">Draw Monochrome</mat-checkbox>
     </div>
 </div>

@@ -11,6 +11,8 @@ import { ProgramChange } from "./ProgramChanges";
     providedIn: "root"
 })
 export class MidiService {
+    private _midiMetadata: MidiMetadata[] = [];
+    private _lastNoteOffEvent: MidiEvent | null = null;
     private _trackColors: string[] = [
         "green",
         "blue",
@@ -21,6 +23,7 @@ export class MidiService {
 
     private _midiFile: MidiFile | undefined;
     get midiFile(): MidiFile | undefined { return this._midiFile; }
+    get isMidiLoaded(): boolean { return this.midiFile != undefined; }
     midiFileLoaded: Subject<MidiService> = new Subject<MidiService>();
 
     private _title: string = "";
@@ -30,15 +33,15 @@ export class MidiService {
     get tracks(): MidiTrack[] { return this._tracks; }
     tracksChange: Subject<MidiService> = new Subject<MidiService>();
 
-    private _display: Display = Display.Frequency;
-    get display(): Display { return this._display; }
-    set display(value: Display) {
-        if (this._display != value) {
-            this._display = value;
-            this.displayChange.next(value);
+    private _overtoneDisplay: OvertoneDisplay = OvertoneDisplay.Frequency;
+    get overtoneDisplay(): OvertoneDisplay { return this._overtoneDisplay; }
+    set overtoneDisplay(value: OvertoneDisplay) {
+        if (this._overtoneDisplay != value) {
+            this._overtoneDisplay = value;
+            this.overtoneDisplayChange.next(value);
         }
     }
-    displayChange: Subject<Display> = new Subject<Display>();
+    overtoneDisplayChange: Subject<OvertoneDisplay> = new Subject<OvertoneDisplay>();
 
     private _drawBackground: boolean = true;
     get drawBackground(): boolean { return this._drawBackground }
@@ -50,29 +53,29 @@ export class MidiService {
     }
     drawBackgroundChange: Subject<boolean> = new Subject<boolean>();
 
-    private _monochrome: boolean = false;
-    get monochrome(): boolean { return this._monochrome }
-    set monochrome(value: boolean) {
-        if (this._monochrome != value) {
-            this._monochrome = value;
+    private _drawMonochrome: boolean = false;
+    get drawMonochrome(): boolean { return this._drawMonochrome }
+    set drawMonochrome(value: boolean) {
+        if (this._drawMonochrome != value) {
+            this._drawMonochrome = value;
             this.drawBackgroundChange.next(value);
         }
     }
-    monochromeChange: Subject<boolean> = new Subject<boolean>();
+    drawMonochromeChange: Subject<boolean> = new Subject<boolean>();
 
-    private _heatMapThreshold: number = 10;
-    get heatMapThreshold(): number { return this._heatMapThreshold; }
-    set heatMapThreshold(value: number) {
-        if (this._heatMapThreshold != value) {
-            this._heatMapThreshold = value;
-            this.heatMapThresholdChange.next(value);
+    private _centsThreshold: number = 10;
+    get centsThreshold(): number { return this._centsThreshold; }
+    set centsThreshold(value: number) {
+        if (this._centsThreshold != value) {
+            this._centsThreshold = value;
+            this.centsThresholdChange.next(value);
         }
     }
-    heatMapThresholdChange: Subject<number> = new Subject<number>();
+    centsThresholdChange: Subject<number> = new Subject<number>();
 
-    private _zoom: number = 1;
-    get zoom(): number { return this._zoom; }
-    set zoom(value: number) {
+    private _zoomLevel: number = 1;
+    get zoomLevel(): number { return this._zoomLevel; }
+    set zoomLevel(value: number) {
         value = Number(value);
         if (value < 1) {
             value = 1;
@@ -81,18 +84,12 @@ export class MidiService {
             value = 4;
         }
 
-        if (this._zoom != value) {
-            this._zoom = value;
-            this.zoomChange.next(value);
+        if (this._zoomLevel != value) {
+            this._zoomLevel = value;
+            this.zoomLevelChange.next(value);
         }
     }
-    zoomChange: Subject<number> = new Subject<number>();
-
-    private _midiMetadata: MidiMetadata[] = [];
-    private _lastNoteOffEvent: MidiEvent | null = null;
-
-    constructor() {
-    }
+    zoomLevelChange: Subject<number> = new Subject<number>();
 
     private reset(): void {
         this._tracks = [];
@@ -332,7 +329,7 @@ class MidiMetadata {
     }
 }
 
-export enum Display {
+export enum OvertoneDisplay {
     Frequency = 1,
     CentsOffset,
     Chord

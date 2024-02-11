@@ -2,7 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { OvertoneSequence } from "../../overtone/OvertoneSequence";
 import { Pitch } from "../../overtone/Pitch";
-import { MidiService, Display } from "../services/midi/midi.service";
+import { MidiService, OvertoneDisplay } from "../services/midi/midi.service";
 import { MidiTrack } from "../services/midi/MidiTrack";
 import Color from "color";
 
@@ -35,14 +35,14 @@ export class CanvasComponent implements OnInit {
 
     private _lastVirtualWidth: number = 0;
     private _lastVirtualHeight: number = 0;
-    private get zoom(): number { return this._midiService.zoom; }
-    private set zoom(value: number) { this._midiService.zoom = value; }
+    private get zoom(): number { return this._midiService.zoomLevel; }
+    private set zoom(value: number) { this._midiService.zoomLevel = value; }
     private _lastWheelEvent: WheelEvent | null = null;
     private _lastMouseX: number = -1;
     private _lastMouseY: number = -1;
 
     constructor(protected _midiService: MidiService) {
-        _midiService.zoomChange.subscribe(v => this.performZoom(v));
+        _midiService.zoomLevelChange.subscribe(v => this.performZoom(v));
     }
 
     windowWheelHandler(e: Event): void {
@@ -75,11 +75,11 @@ export class CanvasComponent implements OnInit {
         this._barsCtx = this._bars.getContext("2d")!;
 
         this._midiService.midiFileLoaded.subscribe(e => this.onFileLoaded(e, this));
-        this._midiService.displayChange.subscribe(e => this.redraw());
-        this._midiService.heatMapThresholdChange.subscribe(e => this.redraw());
+        this._midiService.overtoneDisplayChange.subscribe(e => this.redraw());
+        this._midiService.centsThresholdChange.subscribe(e => this.redraw());
         this._midiService.tracksChange.subscribe(e => { this.trackManagement(); this.redraw() });
         this._midiService.drawBackgroundChange.subscribe(e => this.redraw());
-        this._midiService.monochromeChange.subscribe(e => this.redraw());           
+        this._midiService.drawMonochromeChange.subscribe(e => this.redraw());           
     }
 
     public onFileLoaded(midiService: MidiService, comp: CanvasComponent): void {
@@ -230,7 +230,7 @@ export class CanvasComponent implements OnInit {
         if (track.isTrackVisible) {
             let notes: { [Key: number]: Note | null } = {};
 
-            this._canvasCtx.fillStyle = this._midiService.monochrome ? "gray" : track.color;
+            this._canvasCtx.fillStyle = this._midiService.drawMonochrome ? "gray" : track.color;
 
             for (let event of track.events) {
                 if (event.event.type == "channel") {
@@ -260,7 +260,7 @@ export class CanvasComponent implements OnInit {
     private drawOvertones(midiNote: number, x: number, width: number, color: string): void {
         if (this._canvasCtx == null) { throw new Error("Canvas context not set."); }
 
-        color = this._midiService.monochrome ? "gray" : color;
+        color = this._midiService.drawMonochrome ? "gray" : color;
 
         const sequence = new OvertoneSequence(Pitch.fromMidi(midiNote).frequency, 4068);
         const halfHeight = this._trackDrawHeight / 2;
@@ -270,8 +270,8 @@ export class CanvasComponent implements OnInit {
         let greenColor: Color;
         let redColor: Color;
 
-        if (this._midiService.display == Display.CentsOffset) {
-            greenColor = this._midiService.monochrome ? Color(color) : Color("lime");
+        if (this._midiService.overtoneDisplay == OvertoneDisplay.CentsOffset) {
+            greenColor = this._midiService.drawMonochrome ? Color(color) : Color("lime");
             redColor = Color("red");
         }
         else {
@@ -281,10 +281,10 @@ export class CanvasComponent implements OnInit {
         for (let i = 1; i < Math.min(15, sequence.length); i++) {
             let overtone = sequence[i];
 
-            if (this._midiService.display == Display.CentsOffset) {
+            if (this._midiService.overtoneDisplay == OvertoneDisplay.CentsOffset) {
                 greenColor = greenColor!.darken(0.1);
                 redColor = redColor!.darken(0.15);
-                this._canvasCtx.strokeStyle = this._midiService.heatMapThreshold > Math.abs(overtone.cents) ? greenColor.hex() : redColor.hex();
+                this._canvasCtx.strokeStyle = this._midiService.centsThreshold > Math.abs(overtone.cents) ? greenColor.hex() : redColor.hex();
             }
             else {
                 drawColor = drawColor!.darken(0.15);

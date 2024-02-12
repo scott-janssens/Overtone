@@ -1,8 +1,16 @@
 <input id="file-input" type="file" accept=".mid, .midi" class="file-input" (change)="onLoad($event)" #fileUpload>
 <div class="file-upload">
-    <button color="primary" class="upload-btn" (click)="fileUpload.click()">
-        <mat-icon class="icon">cloud_upload</mat-icon>
+    <p class="filename">{{display || "No file uploaded."}}</p>
+    <!-- <button color="primary" class="upload-btn" (click)="fileUpload.click()"> -->
+    <button mat-button [matMenuTriggerFor]="fileMenu">
+        <mat-icon class="icon">folder_open</mat-icon>
         <!-- <mat-progress-spinner mode="indeterminate"/> -->
     </button>
-    <p class="filename">{{filename || "No file uploaded."}}</p>
+    <mat-menu #fileMenu="matMenu">
+        <ng-template matMenuContent>
+            <button mat-menu-item *ngFor="let file of fileNames" (click)="onMenuSelect(file)">{{file}}</button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="fileUpload.click()">Upload MIDI file...</button>
+        </ng-template>
+    </mat-menu>
 </div>

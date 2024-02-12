@@ -1,5 +1,6 @@
 .file-upload {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 40px;
 }
 
 .file-input {

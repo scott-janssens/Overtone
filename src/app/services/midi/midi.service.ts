@@ -76,7 +76,7 @@ export class MidiService {
     private _zoomLevel: number = 1;
     get zoomLevel(): number { return this._zoomLevel; }
     set zoomLevel(value: number) {
-        value = Number(value);
+        value = Math.round(Number(value) * 100) / 100;
         if (value < 1) {
             value = 1;
         }

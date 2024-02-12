@@ -1,6 +1,6 @@
 <div class="track-container">
     <mat-checkbox class="track-check" [(ngModel)]="track!.isTrackVisible"></mat-checkbox>
-    <span class="track-name">{{track!.name}}</span>
+    <span class="track-name">{{track!.name || "&lt;unnamed&gt;"}}</span>
     <input class="color-picker-display" [(colorPicker)]="track!.color" [style.background]="track!.color"
         cpAlphaChannel="disabled" [cpOKButton]="true" cpOKButtonText="OK" [cpCancelButton]="true"
         cpCancelButtonText="Cancel" />

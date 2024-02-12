@@ -12,7 +12,7 @@ import { ProgramChange, ProgramChanges } from '../services/midi/ProgramChanges';
   standalone: true,
   imports: [CommonModule, FormsModule, MatCheckbox, MatSelect, MatOption, ColorPickerModule],
   templateUrl: './track-item.component.html',
-  styleUrl: './track-item.component.css'
+  styleUrl: './track-item.component.scss'
 })
 export class TrackItemComponent {
   @Input() track: MidiTrack | undefined;

@@ -4,15 +4,15 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatIcon } from '@angular/material/icon';
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
-import { NgFor } from "@angular/common";
+import { NgFor, NgIf } from "@angular/common";
 import { HttpClient, HttpErrorResponse, HttpHeaders } from "@angular/common/http";
 import { Observable } from "rxjs";
 
 @Component({
     selector: "ot-file",
     templateUrl: "./load-midi-file.component.html",
-    styleUrl: "./load-midi-file.component.css",
-    imports: [MatProgressSpinner, MatIcon, MatMenuModule, MatMenuTrigger, MatDividerModule, NgFor],
+    styleUrl: "./load-midi-file.component.scss",
+    imports: [MatProgressSpinner, MatIcon, MatMenuModule, MatMenuTrigger, MatDividerModule, NgFor, NgIf],
     standalone: true
 })
 export class LoadMidiFileComponent implements OnInit {
@@ -23,7 +23,7 @@ export class LoadMidiFileComponent implements OnInit {
         "Orff - Carmina Burana (O Fortuna)",
     ];
 
-    private _fileInput: HTMLInputElement | undefined;
+    private _fileInput!: HTMLInputElement;
     private _file: File | undefined;
 
     private _display: string | undefined;
@@ -31,10 +31,11 @@ export class LoadMidiFileComponent implements OnInit {
 
     @ViewChild(MatMenuTrigger) fileMenu!: MatMenuTrigger;
 
+    isLoading: boolean = false;
     menuPosition = { x: '0px', y: '0px' };
 
     constructor(private _midiService: MidiService, private _http: HttpClient) {
-        _midiService.midiFileLoaded.subscribe(e => { this._display = this._midiService.title || this._file?.name; });
+        _midiService.midiFileLoaded.subscribe(e => this.onLoaded());
     }
 
     ngOnInit(): void {
@@ -50,6 +51,8 @@ export class LoadMidiFileComponent implements OnInit {
     }
 
     onMenuSelect(filename: string) {
+        this.isLoading = true;
+
         const fullFilename = filename + ".mid";
         let url = "./assets/" + fullFilename;
         const headers = {
@@ -62,19 +65,25 @@ export class LoadMidiFileComponent implements OnInit {
         let data: Observable<Blob> = this._http.get<Blob>(url, headers);
         data.subscribe((response: Blob) => {
             const file = new File([response], fullFilename);
-            this._midiService.loadMidiFileAsync(file);
+            this._midiService.loadMidiFile(file);
         }, (error: HttpErrorResponse) => {
             console.log(error.error.text);
         });
     }
 
-    public onLoad(event: any) {
+    async onLoad(event: any) {
+        this.isLoading = true;
         this._file = event.target.files[0];
 
         if (this._file) {
-            this._midiService.loadMidiFileAsync(this._file);
+            this._midiService.loadMidiFile(this._file);
         }
 
         this._fileInput!.value = "";
+    }
+
+    onLoaded() {
+        this._display = this._midiService.title || this._file?.name;
+        this.isLoading = false;
     }
 }

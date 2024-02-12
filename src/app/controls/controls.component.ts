@@ -15,7 +15,7 @@ import { MidiTrack } from "../services/midi/MidiTrack";
 @Component({
     selector: "ot-controls",
     templateUrl: "./controls.component.html",
-    styleUrl: "./controls.component.css",
+    styleUrl: "./controls.component.scss",
     imports: [CdkDropList, CdkDrag, LoadMidiFileComponent, TrackItemComponent, MatSliderModule, MatRadioModule, MatCheckbox, MatMenuModule, MatMenuTrigger, MatDividerModule, CommonModule, FormsModule],
     standalone: true
 })

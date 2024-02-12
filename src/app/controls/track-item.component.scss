@@ -1,12 +1,11 @@
+@use '../../main.scss' as *;
+
 .track-container {
     display: grid;
     grid-template-columns: 40px auto 100px 22px;
     grid-template-rows: auto auto;
-    background-color: #2f2f2f;
+    background-color: $control-background;
     margin-top: 1px;
-    margin-bottom: 1px;
-    padding-top: 2px;
-    padding-bottom: 2px;
 }
 
 .program-select {
@@ -22,6 +21,7 @@
     grid-column: span 2;
     font-family: Roboto, sans-serif;
     font-weight: 300;
+    @include center(y);
 }
 
 .color-picker-display {

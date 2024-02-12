@@ -143,7 +143,7 @@ export class MidiService {
         return this._midiMetadata[i];
     }
 
-    async loadMidiFileAsync(file: File): Promise<void> {
+    loadMidiFile(file: File) {
         this.reset();
         const reader = new FileReader();
         reader.onload = e => {
@@ -167,10 +167,6 @@ export class MidiService {
         };
 
         reader.readAsArrayBuffer(file);
-
-        while (this._midiFile === null) {
-            await new Promise((r) => setTimeout(r, 100));
-        }
     }
 
     private getMetaData(midi: MidiFile): void {

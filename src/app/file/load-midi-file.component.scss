@@ -1,0 +1,41 @@
+@use '../../main.scss' as *;
+
+.file-upload {
+  display: grid;
+  grid-template-columns: auto 40px;
+  padding-left: 5px;
+  height: 33px;
+}
+
+.file-input {
+  display: none;
+}
+
+.filename {
+  display: flex;
+  margin: 0;
+  align-items: center;
+  font-family: Roboto, sans-serif;
+  font-weight: 100;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-wrap: nowrap;
+}
+
+.btn-container {
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  color: forestgreen;
+}
+
+.load-spinner {
+  height: 24px !important;
+  width: 24px !important;
+}
+
+::ng-deep .mat-mdc-menu-panel {
+  max-width: unset !important;
+}

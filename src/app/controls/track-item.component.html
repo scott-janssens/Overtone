@@ -4,9 +4,11 @@
     <input class="color-picker-display" [(colorPicker)]="track!.color" [style.background]="track!.color"
         cpAlphaChannel="disabled" [cpOKButton]="true" cpOKButtonText="OK" [cpCancelButton]="true"
         cpCancelButtonText="Cancel" />
-    <mat-select class="program-select" [(ngModel)]="track!.program">
-        <mat-option value="undefined">None</mat-option>
-        <mat-option *ngFor="let item of programChanges" [value]="item">{{item.instrument}}</mat-option>
-    </mat-select>
-    <p class="program-type">{{track?.program?.type}}</p>
+    <div class="program-container">
+        <mat-select class="program-select" [(ngModel)]="track!.program">
+            <mat-option value="undefined">None</mat-option>
+            <mat-option *ngFor="let item of programChanges" [value]="item">{{item.instrument}}</mat-option>
+        </mat-select>
+        <span class="program-type">{{track?.program?.type}}</span>
+    </div>
 </div>

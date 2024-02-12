@@ -2,14 +2,17 @@
 
 .track-container {
     display: grid;
-    grid-template-columns: 40px auto 100px 22px;
+    grid-template-columns: 40px auto 22px;
     grid-template-rows: auto auto;
     background-color: $control-background;
     margin-top: 1px;
 }
 
+.program-container {
+    display: flex;
+}
+
 .program-select {
-    grid-column: 2;
     font-size: small;
 }
 
@@ -18,7 +21,6 @@
 }
 
 .track-name {
-    grid-column: span 2;
     font-family: Roboto, sans-serif;
     font-weight: 300;
     @include center(y);
@@ -31,10 +33,28 @@
 }
 
 .program-type {
+    display: flex;
+    align-items: center;
+    justify-content: right;
+    padding-right: 4px;
     margin: 0;
     font-family: Roboto, sans-serif;
     font-weight: 100;
     font-size: small;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 100px;
+}
+
+::ng-deep mat-mdc-option {
+    min-height: 32px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+
+::ng-deep .mdc-list-item__primary-text {
+    text-wrap: nowrap !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+    font-size: small !important;
 }

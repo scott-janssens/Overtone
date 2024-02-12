@@ -14,11 +14,18 @@ export class MidiService {
     private _midiMetadata: MidiMetadata[] = [];
     private _lastNoteOffEvent: MidiEvent | null = null;
     private _trackColors: string[] = [
-        "green",
-        "blue",
-        "yellow",
-        "orange",
-        "red"
+        "#ffff00",
+        "#ff00ff",
+        "#00ffff",
+        "#ff7f7f",
+        "#7fff7f",
+        "#7f7fff",
+        "#ff7f00",
+        "#ff007f",
+        "#3fff00",
+        "#007fff",
+        "#7f00ff",
+        "#7f7f7f"
     ];
 
     private _midiFile: MidiFile | undefined;

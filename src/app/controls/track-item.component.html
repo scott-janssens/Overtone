@@ -1,9 +1,9 @@
 <div class="track-container">
     <mat-checkbox class="track-check" [(ngModel)]="track!.isTrackVisible"></mat-checkbox>
     <span class="track-name">{{track!.name || "&lt;unnamed&gt;"}}</span>
-    <input class="color-picker-display" [(colorPicker)]="track!.color" [style.background]="track!.color"
-        cpAlphaChannel="disabled" [cpOKButton]="true" cpOKButtonText="OK" [cpCancelButton]="true"
-        cpCancelButtonText="Cancel" />
+    <div #colorPickerContainer class="color-picker-container" [style.background]="track!.color">
+        <input #colorPicker type="color" class="color-picker-display" [(ngModel)]="track!.color">
+    </div>
     <div class="program-container">
         <mat-select class="program-select" [(ngModel)]="track!.program">
             <mat-option value="undefined">None</mat-option>

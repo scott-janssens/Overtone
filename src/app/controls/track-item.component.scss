@@ -16,8 +16,10 @@
     font-size: small;
 }
 
-.track-check {
+.check-container {
     grid-row: span 2;
+    display: flex;
+    align-items: center;
 }
 
 .track-name {
@@ -28,15 +30,15 @@
 
 input[type="color"] {
     grid-row: span 2;
-	opacity: 0;
-	display: block;
-	width: 100%;
-	height: 100%;
-	border: none;
+    opacity: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
 }
 
 .color-picker-container {
-	float: left;
+    float: left;
     grid-row: span 2;
     border-radius: 11px;
     margin: 4px;
@@ -54,6 +56,20 @@ input[type="color"] {
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 100px;
+}
+
+.mat-mdc-checkbox.mat-accent {
+    --mdc-checkbox-selected-hover-icon-color: chartreuse !important;
+    --mdc-checkbox-selected-pressed-icon-color: lime !important;
+
+    --mdc-checkbox-unselected-focus-icon-color: lime !important;
+    --mdc-checkbox-unselected-hover-icon-color: lime !important;
+    --mdc-checkbox-unselected-icon-color: green !important;
+    --mdc-checkbox-unselected-pressed-icon-color: lime !important;
+}
+
+.mdc-list-item--selected {
+    --mat-option-selected-state-label-text-color: #69f0ae !important;
 }
 
 ::ng-deep mat-mdc-option {

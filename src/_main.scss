@@ -1,5 +1,6 @@
 $container-background: #1c1c1c;
 $control-background: #2f2f2f;
+$--mat-option-selected-state-label-text-color: lime;
 
 @mixin center($axis: "both"){
     position: relative;

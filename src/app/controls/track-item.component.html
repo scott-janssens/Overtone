@@ -1,5 +1,7 @@
 <div class="track-container">
-    <mat-checkbox class="track-check" [(ngModel)]="track!.isTrackVisible"></mat-checkbox>
+    <div class="check-container">
+        <mat-checkbox [(ngModel)]="track!.isTrackVisible"></mat-checkbox>
+    </div>
     <span class="track-name">{{track!.name || "&lt;unnamed&gt;"}}</span>
     <div #colorPickerContainer class="color-picker-container" [style.background]="track!.color">
         <input #colorPicker type="color" class="color-picker-display" [(ngModel)]="track!.color">

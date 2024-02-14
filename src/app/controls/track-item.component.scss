@@ -57,30 +57,3 @@ input[type="color"] {
     text-overflow: ellipsis;
     min-width: 100px;
 }
-
-.mat-mdc-checkbox.mat-accent {
-    --mdc-checkbox-selected-hover-icon-color: chartreuse !important;
-    --mdc-checkbox-selected-pressed-icon-color: lime !important;
-
-    --mdc-checkbox-unselected-focus-icon-color: lime !important;
-    --mdc-checkbox-unselected-hover-icon-color: lime !important;
-    --mdc-checkbox-unselected-icon-color: green !important;
-    --mdc-checkbox-unselected-pressed-icon-color: lime !important;
-}
-
-.mdc-list-item--selected {
-    --mat-option-selected-state-label-text-color: #69f0ae !important;
-}
-
-::ng-deep mat-mdc-option {
-    min-height: 32px !important;
-    padding-left: 8px !important;
-    padding-right: 8px !important;
-}
-
-::ng-deep .mdc-list-item__primary-text {
-    text-wrap: nowrap !important;
-    text-overflow: ellipsis !important;
-    overflow: hidden !important;
-    font-size: small !important;
-}

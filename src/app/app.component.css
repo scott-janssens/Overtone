@@ -4,7 +4,14 @@ main {
 }
 
 .app {
-    display: grid;
-    grid-template-columns: 80% 20%;
-    grid-column-gap: 10px;
+    display: flex;
+    height: 100%;
+}
+
+.workspace {
+    flex: 0 1 80%;
+}
+
+.control-panel {
+    flex: 1 0 auto;
 }

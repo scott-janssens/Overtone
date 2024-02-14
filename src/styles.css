@@ -1,6 +1,71 @@
 @import "../node_modules/@angular/material/prebuilt-themes/purple-green.css";
 
+html,
+body {
+    height: 100%;
+    margin: 0;
+}
+
 body {
     background-color: black;
     color: white;
+}
+
+label {
+    font-family: Roboto, sans-serif;
+}
+
+.mat-mdc-checkbox.mat-accent {
+    --mdc-checkbox-selected-hover-icon-color: lime !important;
+    --mdc-checkbox-selected-pressed-icon-color: green !important;
+    --mdc-checkbox-selected-focus-icon-color: green !important;
+    --mdc-checkbox-selected-icon-color: forestgreen !important;
+    --mat-full-pseudo-checkbox-selected-icon-color: green !important;
+    --mat-minimal-pseudo-checkbox-selected-checkmark-color: green !important;
+    --mdc-checkbox-selected-pressed-state-layer-color: green !important;
+    --mdc-checkbox-selected-focus-state-layer-color: green !important;
+    --mdc-checkbox-selected-hover-state-layer-color: green !important;
+
+    --mdc-checkbox-unselected-focus-icon-color: green !important;
+    --mdc-checkbox-unselected-hover-icon-color: green !important;
+    --mdc-checkbox-unselected-icon-color: green !important;
+    --mdc-checkbox-unselected-pressed-icon-color: green !important;
+}
+
+.mdc-list-item--selected {
+    --mat-option-selected-state-label-text-color: #69f0ae !important;
+}
+
+.mat-mdc-radio-button.mat-accent {
+    --mdc-radio-selected-focus-icon-color: green !important;
+    --mdc-radio-selected-hover-icon-color: green !important;
+    --mdc-radio-selected-icon-color: green !important;
+    --mdc-radio-selected-pressed-icon-color: green !important;
+    --mat-radio-checked-ripple-color: green !important;
+    --mdc-circular-progress-active-indicator-color: green !important;
+    --mdc-slider-focus-handle-color: green !important;
+    --mdc-slider-hover-handle-color: green !important;
+    --mdc-slider-inactive-track-color: green !important;
+    --mdc-slider-with-tick-marks-inactive-container-color: green !important;
+    --mat-full-pseudo-checkbox-selected-icon-color: green !important;
+    --mat-minimal-pseudo-checkbox-selected-checkmark-color: green !important;
+    --mat-option-selected-state-label-text-color: green !important;
+
+    --mdc-radio-unselected-focus-icon-color: green !important;
+    --mdc-radio-unselected-hover-icon-color: green !important;
+    --mdc-radio-unselected-icon-color: green !important;
+    --mdc-radio-unselected-pressed-icon-color: green !important;
+}
+
+::ng-deep mat-mdc-option {
+    min-height: 32px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+
+::ng-deep .mdc-list-item__primary-text {
+    text-wrap: nowrap !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+    font-size: small !important;
 }

@@ -1,8 +1,8 @@
-<div class="file-container">
-    <ot-file></ot-file>
-</div>
-<div class="controls-container" *ngIf="model.isMidiLoaded">
-    <div class="list-container">
+<div class="controls-container">
+    <div class="file-container">
+        <ot-file></ot-file>
+    </div>
+    <div class="list-container" *ngIf="model.isMidiLoaded">
         <div cdkDropList class="track-list" (cdkDropListDropped)="drop($event)">
             @for (t of model.tracks; track t) {
             <div cdkDrag (contextmenu)="onContextMenu($event, t)">
@@ -34,38 +34,51 @@
             </ng-template>
         </mat-menu>
     </div>
-    <div class="controls">
-        <label>Zoom</label>
-        <div>
-            <mat-slider min="1" max="4" step="0.025" [(ngModel)]="model.zoomLevel" ngDefaultControl>
-                <input matSliderThumb [value]="model.zoomLevel">
-            </mat-slider>
-            <span class="slider-value">{{model.zoomLevel}}</span>
-        </div>
+    <div class="controls" *ngIf="model.isMidiLoaded">
         <mat-radio-group [(ngModel)]="model.overtoneDisplay">
             <mat-radio-button [value]="OvertoneDisplayEnum.Frequency">Frequencies</mat-radio-button>
             <mat-radio-button [value]="OvertoneDisplayEnum.CentsOffset">Cents Offset</mat-radio-button>
             <mat-radio-button disabled="true" [value]="OvertoneDisplayEnum.Chord">Chord</mat-radio-button>
         </mat-radio-group>
         <div>
-            <div *ngIf="model.overtoneDisplay === OvertoneDisplayEnum.Frequency">
-                <mat-slider disabled="true" min="0" max="1">
-                    <input matSliderThumb [value]="0">
-                </mat-slider>
+            <div class="slider-container" *ngIf="model.overtoneDisplay === OvertoneDisplayEnum.Frequency">
+                <label class="slider-label">Overtones</label>
+                <div class="slider">
+                    <mat-slider disabled="true" min="0" max="1">
+                        <input matSliderThumb [value]="0">
+                    </mat-slider>
+                </div>
+                <span class="slider-value"></span>
             </div>
-            <div *ngIf="model.overtoneDisplay === OvertoneDisplayEnum.CentsOffset">
-                <mat-slider min="0" max="50" [(ngModel)]="model.centsThreshold" ngDefaultControl>
-                    <input matSliderThumb [value]="model.centsThreshold">
-                </mat-slider>
+            <div class="slider-container" *ngIf="model.overtoneDisplay === OvertoneDisplayEnum.CentsOffset">
+                <label class="slider-label">Overtones</label>
+                <div class="slider">
+                    <mat-slider min="0" max="50" [(ngModel)]="model.centsThreshold" ngDefaultControl>
+                        <input matSliderThumb [value]="model.centsThreshold">
+                    </mat-slider>
+                </div>
                 <span class="slider-value">{{model.centsThreshold}}</span>
             </div>
-            <div *ngIf="model.overtoneDisplay === OvertoneDisplayEnum.Chord">
-                <mat-slider min="5" max="13" step="2" [(ngModel)]="model.centsThreshold" ngDefaultControl>
-                    <input matSliderThumb [value]="5">
-                </mat-slider>
+            <div class="slider-container" *ngIf="model.overtoneDisplay === OvertoneDisplayEnum.Chord">
+                <label class="slider-label">Overtones</label>
+                <div class="slider">
+                    <mat-slider min="5" max="13" step="2" [(ngModel)]="model.centsThreshold" ngDefaultControl>
+                        <input matSliderThumb [value]="5">
+                    </mat-slider>
+                </div>
                 <span class="slider-value">5</span>
             </div>
         </div>
+        <div class="slider-container">
+            <label class="slider-label">Zoom</label>
+            <div class="slider">
+                <mat-slider min="1" max="4" step="0.025" [(ngModel)]="model.zoomLevel" ngDefaultControl>
+                    <input matSliderThumb [value]="model.zoomLevel">
+                </mat-slider>
+            </div>
+            <span class="slider-value">{{model.zoomLevel}}</span>
+        </div>
+        <mat-divider></mat-divider>
         <mat-checkbox [(ngModel)]="model.drawBackground">Draw Background</mat-checkbox>
         <mat-checkbox [(ngModel)]="model.drawMonochrome">Draw Monochrome</mat-checkbox>
     </div>

@@ -15,6 +15,28 @@ label {
     font-family: Roboto, sans-serif;
 }
 
+.mat-mdc-progress-spinner{
+    --mdc-circular-progress-active-indicator-color: green;
+}
+
+.mat-mdc-slider {
+    --mdc-slider-handle-color: green;
+    --mdc-slider-focus-handle-color: lime;
+    --mdc-slider-active-track-color: green;
+    --mdc-slider-inactive-track-color: green;
+    --mat-slider-ripple-color: green;
+
+    --mdc-slider-selected-pressed-state-layer-color: green !important;
+    --mdc-slider-selected-focus-state-layer-color: green !important;
+    --mdc-slider-selected-hover-state-layer-color: green !important;
+    --mdc-slider-hover-handle-color: green !important;
+
+    --mdc-slider-selected-focus-icon-color: green !important;
+    --mdc-slider-selected-hover-icon-color: green !important;
+    --mdc-slider-selected-icon-color: green !important;
+    --mdc-slider-selected-pressed-icon-color: green !important;
+}
+
 .mat-mdc-checkbox.mat-accent {
     --mdc-checkbox-selected-hover-icon-color: lime !important;
     --mdc-checkbox-selected-pressed-icon-color: green !important;

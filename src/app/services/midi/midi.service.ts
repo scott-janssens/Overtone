@@ -40,6 +40,9 @@ export class MidiService {
     get tracks(): MidiTrack[] { return this._tracks; }
     tracksChange: Subject<MidiService> = new Subject<MidiService>();
 
+    private _totalBeats: number = 0;
+    get totalBeats(): number { return this._totalBeats; }
+
     private _overtoneDisplay: OvertoneDisplay = OvertoneDisplay.Frequency;
     get overtoneDisplay(): OvertoneDisplay { return this._overtoneDisplay; }
     set overtoneDisplay(value: OvertoneDisplay) {
@@ -106,18 +109,22 @@ export class MidiService {
     }
 
     getTempo(bar: number): number {
-        return this.getMetdataNode(bar).bpm;
+        return this._midiMetadata[bar - 1].bpm;
     }
 
     getTimeSignatureNumerator(bar: number): number {
-        return this.getMetdataNode(bar).timeSigNumerator;
+        return this._midiMetadata[bar - 1].timeSigNumerator;
     }
 
     getTimeSignatureDenominator(bar: number): number {
-        return this.getMetdataNode(bar).timeSigDenominator;
+        return this._midiMetadata[bar - 1].timeSigDenominator;
     }
 
-    getTotalBeats(): number {
+    getGlobalTimeAtBar(bar: number): number {
+        return this._midiMetadata[bar - 1].globalTime;
+    }
+
+    private setTotalBeats(): void {
         if (this._lastNoteOffEvent === null) {
             for (let track of this._tracks) {
                 for (let i = track.events.length - 1; i >= 0; i--) {
@@ -131,24 +138,35 @@ export class MidiService {
             }
         }
 
-        const beats = this._lastNoteOffEvent!.globalTime / this._midiFile!.header.ticksPerBeat;
-
-        return beats;
+        this._totalBeats = this._lastNoteOffEvent!.globalTime / this._midiFile!.header.ticksPerBeat;
     }
 
-    private getMetdataNode(bar: number): MidiMetadata {
-        let i = 0;
+    getBarFromBeat(beatNum: number): number {
+        let beats = 0;
 
-        if (this._midiMetadata.length > 1) {
-            for (; i + 1 < this._midiMetadata.length; i++) {
-                if (bar < this._midiMetadata[i + 1].barNumber) {
-                    break;
-                }
+        for (let i = 0; i + 1 < this._midiMetadata.length; i++) {
+            beats += this._midiMetadata[i].timeSigNumerator;
+            if (beats > beatNum) {
+                return i + 1;
             }
         }
 
-        return this._midiMetadata[i];
+        return this._totalBeats;
     }
+
+    // private getMetdataNode(bar: number): MidiMetadata {
+    //     let i = 0;
+
+    //     if (this._midiMetadata.length > 1) {
+    //         for (; i + 1 < this._midiMetadata.length; i++) {
+    //             if (bar < this._midiMetadata[i + 1].barNumber) {
+    //                 break;
+    //             }
+    //         }
+    //     }
+
+    //     return this._midiMetadata[i];
+    // }
 
     loadMidiFile(file: File) {
         this.reset();
@@ -169,6 +187,8 @@ export class MidiService {
                     }
                 }
 
+                this.setTotalBeats();
+
                 this.midiFileLoaded.next(this);
             }
         };
@@ -177,14 +197,23 @@ export class MidiService {
     }
 
     private getMetaData(midi: MidiFile): void {
-        let metadata: MidiMetadata = new MidiMetadata(1);
+        let metadata: MidiMetadata = new MidiMetadata(1, 0);
 
         for (let event of midi.tracks[0]) {
+
             if (event.deltaTime > 0) {
-                this._midiMetadata.push(metadata);
                 const beats = event.deltaTime / midi.header.ticksPerBeat;
-                const bars = beats / metadata.timeSigNumerator * metadata.timeSigDenominator / 4;
-                metadata = new MidiMetadata(metadata.barNumber + bars, metadata);
+                const bars = metadata.barNumber + Math.floor(beats / metadata.timeSigNumerator * metadata.timeSigDenominator / 4);
+                let globalTime = metadata.globalTime;
+                let barTime = midi.header.ticksPerBeat * metadata.timeSigNumerator;
+
+                this._midiMetadata.push(metadata);
+                for (let i = metadata.barNumber + 1; i < bars; i++) {
+                    globalTime += barTime;
+                    this._midiMetadata.push(new MidiMetadata(i, globalTime, metadata));
+                }
+
+                metadata = new MidiMetadata(bars, globalTime + barTime, metadata);
             }
 
             if (event.type == "meta") {
@@ -315,14 +344,15 @@ export class MidiService {
 
 class MidiMetadata {
     barNumber: number;
-    deltaTime: number = 0;
+    globalTime: number;
     timeSigNumerator: number = 4;
     timeSigDenominator: number = 4;
     tempo: number = 0;
     bpm: number = 120;
 
-    constructor(barNumber: number, prev: MidiMetadata | null = null) {
+    constructor(barNumber: number, globaltime: number, prev: MidiMetadata | null = null) {
         this.barNumber = barNumber;
+        this.globalTime = globaltime;
 
         if (prev != null) {
             this.timeSigNumerator = prev.timeSigNumerator;

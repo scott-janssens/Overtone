@@ -101,6 +101,49 @@ export class MidiTrack {
 
         return newTrack;
     }
+
+    *iterateFrom(globalTime: number): Generator<MidiEvent> {
+        let i = this.binarySearch(globalTime);
+        for (; i < this._events.length; i++) {
+            yield this._events[i];
+        }
+    }
+
+    private binarySearch(globalTime: number): number {
+        let left = 0;
+        let right = this._events.length;
+        let length = right - left;
+        let i = Math.floor(length / 2);
+
+        while (left < right) {
+            if (this._events[i].globalTime === globalTime) {
+                break;
+            }
+
+            if (globalTime < this._events[i].globalTime) {
+                if (right === i) {
+                    break;
+                }
+
+                right = i;
+            }
+            else {
+                if (left === i) {
+                    break;
+                }
+                left = i;
+            }
+
+            length = right - left;
+            i = left + Math.floor(length / 2);
+        }
+
+        while (i > 0 && this._events[i].globalTime >= globalTime) {
+            i--;
+        }
+
+        return i;
+    }
 }
 
 export class MidiEvent {

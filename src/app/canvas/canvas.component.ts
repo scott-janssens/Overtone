@@ -22,12 +22,12 @@ export class CanvasComponent implements OnInit {
     private _pitchesContainer: HTMLDivElement | undefined;
     private _container: HTMLDivElement | undefined;
     private _canvas: HTMLCanvasElement | undefined;
-    private _canvasCtx: CanvasRenderingContext2D | undefined;
+    private _canvasCtx!: CanvasRenderingContext2D;
     private _pitches: HTMLCanvasElement | undefined;
     private _pitchesCtx: CanvasRenderingContext2D | undefined;
     private _bars: HTMLCanvasElement | undefined;
-    private _barsCtx: CanvasRenderingContext2D | undefined;
-    private _trackDrawWidth: number = 1200;
+    private _barsCtx!: CanvasRenderingContext2D;
+    //private _trackDrawWidth: number = 1200;
     private readonly _trackDrawHeight = trackDrawHeight;
     private _whiteKey: string = "#04242e";
     private _blackKey: string = "#000000";
@@ -40,6 +40,10 @@ export class CanvasComponent implements OnInit {
     private _lastWheelEvent: WheelEvent | null = null;
     private _lastMouseX: number = -1;
     private _lastMouseY: number = -1;
+
+    private _firstDrawBeat: number = 1;
+    private _firstDrawBar: number = 1;
+    private _viewRight: number = 0;
 
     constructor(protected _midiService: MidiService) {
         _midiService.zoomLevelChange.subscribe(v => this.performZoom(v));
@@ -79,14 +83,15 @@ export class CanvasComponent implements OnInit {
         this._midiService.centsThresholdChange.subscribe(e => this.redraw());
         this._midiService.tracksChange.subscribe(e => { this.trackManagement(); this.redraw() });
         this._midiService.drawBackgroundChange.subscribe(e => this.redraw());
-        this._midiService.drawMonochromeChange.subscribe(e => this.redraw());           
+        this._midiService.drawMonochromeChange.subscribe(e => this.redraw());
     }
 
     public onFileLoaded(midiService: MidiService, comp: CanvasComponent): void {
         comp.trackManagement();
 
         beatPos = quarterNoteWidth / midiService.midiFile!.header.ticksPerBeat;
-        this._trackDrawWidth = comp._canvas!.width = this._bars!.width = midiService.getTotalBeats() * quarterNoteWidth;
+        this._container!.scrollLeft = this._container!.scrollTop = 0;
+        /*this._trackDrawWidth =*/ comp._canvas!.width = this._bars!.width = midiService.totalBeats * quarterNoteWidth;
 
         comp.redraw();
     }
@@ -123,9 +128,10 @@ export class CanvasComponent implements OnInit {
         this.zoom += 0.00025 * event.deltaY;
         this._lastWheelEvent = null;
     }
-    
+
     onCanvasScroll(event: Event): void {
         this._pitchesContainer!.style.transform = "translate(0px," + -(<HTMLDivElement>event.target).scrollTop + "px)";
+        this.redraw();
     }
 
     mouseDown(event: PointerEvent) {
@@ -210,6 +216,10 @@ export class CanvasComponent implements OnInit {
     }
 
     private redraw(): void {
+        this._firstDrawBeat = Math.floor(this._container!.scrollLeft / quarterNoteWidth) + 1;
+        this._firstDrawBar = this._midiService.getBarFromBeat(this._firstDrawBeat);
+        this._viewRight = this._container!.scrollLeft + this._container!.clientWidth;
+
         this._canvasCtx!.clearRect(0, 0, this._canvas!.width, this._canvas!.height)
         this._pitchesCtx!.clearRect(0, 0, this._pitches!.width, this._pitches!.height)
         this._barsCtx!.clearRect(0, 0, this._bars!.width, this._bars!.height)
@@ -225,14 +235,17 @@ export class CanvasComponent implements OnInit {
     }
 
     private drawMidiTrack(track: MidiTrack): void {
-        if (this._canvasCtx == null) { throw new Error("Canvas context not set."); }
-
         if (track.isTrackVisible) {
             let notes: { [Key: number]: Note | null } = {};
 
             this._canvasCtx.fillStyle = this._midiService.drawMonochrome ? "gray" : track.color;
 
-            for (let event of track.events) {
+            const startTime = this._midiService.getGlobalTimeAtBar(this._firstDrawBar);
+            for (let event of track.iterateFrom(startTime)) {
+                if (event.globalTime * beatPos > this._viewRight) {
+                    break;
+                }
+            //for (let event of track.events) {
                 if (event.event.type == "channel") {
                     switch (event.event.subtype) {
                         case "noteOn":
@@ -258,8 +271,6 @@ export class CanvasComponent implements OnInit {
     }
 
     private drawOvertones(midiNote: number, x: number, width: number, color: string): void {
-        if (this._canvasCtx == null) { throw new Error("Canvas context not set."); }
-
         color = this._midiService.drawMonochrome ? "gray" : color;
 
         const sequence = new OvertoneSequence(Pitch.fromMidi(midiNote).frequency, 4068);
@@ -300,16 +311,22 @@ export class CanvasComponent implements OnInit {
     }
 
     private drawBars(): void {
-        if (this._canvasCtx == null) { throw new Error("Canvas context not set."); }
-
         this._canvasCtx.strokeStyle = "black";
         this._canvasCtx.lineWidth = 1;
 
         let bar = 1;
 
-        for (let i = quarterNoteWidth * this._midiService.getTimeSignatureNumerator(1) * 4 / this._midiService.getTimeSignatureDenominator(1);
-             i < this._trackDrawWidth;
-             bar++, i += quarterNoteWidth * this._midiService.getTimeSignatureNumerator(bar) * 4 / this._midiService.getTimeSignatureDenominator(bar)) {
+        // for (let i = quarterNoteWidth * this._midiService.getTimeSignatureNumerator(1) * 4 / this._midiService.getTimeSignatureDenominator(1);
+        //      i < this._trackDrawWidth;
+        //      bar++, i += quarterNoteWidth * this._midiService.getTimeSignatureNumerator(bar) * 4 / this._midiService.getTimeSignatureDenominator(bar)) {
+        let i = quarterNoteWidth * this._midiService.getTimeSignatureNumerator(1) * 4 / this._midiService.getTimeSignatureDenominator(1);
+
+        for (i; bar < this._firstDrawBar;
+            bar++, i += quarterNoteWidth * this._midiService.getTimeSignatureNumerator(bar) * 4 / this._midiService.getTimeSignatureDenominator(bar)) {
+        }
+
+        for (; i < this._viewRight;
+            bar++, i += quarterNoteWidth * this._midiService.getTimeSignatureNumerator(bar) * 4 / this._midiService.getTimeSignatureDenominator(bar)) {
             this._canvasCtx.beginPath();
             this._canvasCtx.moveTo(i, 0);
             this._canvasCtx.lineTo(i, this._trackDrawHeight * this._trackCount);
@@ -322,55 +339,52 @@ export class CanvasComponent implements OnInit {
             return;
         }
 
-        if (this._canvasCtx == null) { throw new Error("Canvas context not set."); }
-
         this._canvasCtx.strokeStyle = this._blackKey;
 
         for (let i = 0; i < this._trackCount; i += 12) {
-            this._canvasCtx.fillRect(0, i * this._trackDrawHeight, this._trackDrawWidth, this._trackDrawHeight);
+            this._canvasCtx.fillRect(this._container!.scrollLeft, i * this._trackDrawHeight, this._container!.clientWidth, this._trackDrawHeight);
             this._canvasCtx.beginPath();
-            this._canvasCtx.moveTo(0, i * this._trackDrawHeight);
-            this._canvasCtx.lineTo(this._trackDrawWidth, i * this._trackDrawHeight);
+            this._canvasCtx.moveTo(this._container!.scrollLeft, i * this._trackDrawHeight);
+            this._canvasCtx.lineTo(this._container!.clientWidth, i * this._trackDrawHeight);
             this._canvasCtx.stroke();
             this._canvasCtx.fillStyle = this._whiteKey;
-            this._canvasCtx.fillRect(0, i * this._trackDrawHeight, this._trackDrawWidth, this._trackDrawHeight);
+            this._canvasCtx.fillRect(this._container!.scrollLeft, i * this._trackDrawHeight, this._container!.clientWidth, this._trackDrawHeight);
             this._canvasCtx.fillStyle = this._blackKey;
-            this._canvasCtx.fillRect(0, (i + 1) * this._trackDrawHeight, this._trackDrawWidth, this._trackDrawHeight);
+            this._canvasCtx.fillRect(this._container!.scrollLeft, (i + 1) * this._trackDrawHeight, this._container!.clientWidth, this._trackDrawHeight);
             this._canvasCtx.fillStyle = this._whiteKey;
-            this._canvasCtx.fillRect(0, (i + 2) * this._trackDrawHeight, this._trackDrawWidth, this._trackDrawHeight);
+            this._canvasCtx.fillRect(this._container!.scrollLeft, (i + 2) * this._trackDrawHeight, this._container!.clientWidth, this._trackDrawHeight);
             this._canvasCtx.fillStyle = this._blackKey;
-            this._canvasCtx.fillRect(0, (i + 3) * this._trackDrawHeight, this._trackDrawWidth, this._trackDrawHeight);
+            this._canvasCtx.fillRect(this._container!.scrollLeft, (i + 3) * this._trackDrawHeight, this._container!.clientWidth, this._trackDrawHeight);
             this._canvasCtx.fillStyle = this._whiteKey;
-            this._canvasCtx.fillRect(0, (i + 4) * this._trackDrawHeight, this._trackDrawWidth, this._trackDrawHeight);
+            this._canvasCtx.fillRect(this._container!.scrollLeft, (i + 4) * this._trackDrawHeight, this._container!.clientWidth, this._trackDrawHeight);
             this._canvasCtx.fillStyle = this._blackKey;
-            this._canvasCtx.fillRect(0, (i + 5) * this._trackDrawHeight, this._trackDrawWidth, this._trackDrawHeight);
+            this._canvasCtx.fillRect(this._container!.scrollLeft, (i + 5) * this._trackDrawHeight, this._container!.clientWidth, this._trackDrawHeight);
             this._canvasCtx.fillStyle = this._whiteKey;
-            this._canvasCtx.fillRect(0, (i + 6) * this._trackDrawHeight, this._trackDrawWidth, this._trackDrawHeight);
+            this._canvasCtx.fillRect(this._container!.scrollLeft, (i + 6) * this._trackDrawHeight, this._container!.clientWidth, this._trackDrawHeight);
             this._canvasCtx.beginPath();
-            this._canvasCtx.moveTo(0, (i + 7) * this._trackDrawHeight);
-            this._canvasCtx.lineTo(this._trackDrawWidth, (i + 7) * this._trackDrawHeight);
+            this._canvasCtx.moveTo(this._container!.scrollLeft, (i + 7) * this._trackDrawHeight);
+            this._canvasCtx.lineTo(this._container!.clientWidth, (i + 7) * this._trackDrawHeight);
             this._canvasCtx.stroke();
             this._canvasCtx.fillStyle = this._whiteKey;
-            this._canvasCtx.fillRect(0, (i + 7) * this._trackDrawHeight, this._trackDrawWidth, this._trackDrawHeight);
+            this._canvasCtx.fillRect(this._container!.scrollLeft, (i + 7) * this._trackDrawHeight, this._container!.clientWidth, this._trackDrawHeight);
             this._canvasCtx.fillStyle = this._blackKey;
-            this._canvasCtx.fillRect(0, (i + 8) * this._trackDrawHeight, this._trackDrawWidth, this._trackDrawHeight);
+            this._canvasCtx.fillRect(this._container!.scrollLeft, (i + 8) * this._trackDrawHeight, this._container!.clientWidth, this._trackDrawHeight);
             this._canvasCtx.fillStyle = this._whiteKey;
-            this._canvasCtx.fillRect(0, (i + 9) * this._trackDrawHeight, this._trackDrawWidth, this._trackDrawHeight);
+            this._canvasCtx.fillRect(this._container!.scrollLeft, (i + 9) * this._trackDrawHeight, this._container!.clientWidth, this._trackDrawHeight);
             this._canvasCtx.fillStyle = this._blackKey;
-            this._canvasCtx.fillRect(0, (i + 10) * this._trackDrawHeight, this._trackDrawWidth, this._trackDrawHeight);
+            this._canvasCtx.fillRect(this._container!.scrollLeft, (i + 10) * this._trackDrawHeight, this._container!.clientWidth, this._trackDrawHeight);
             this._canvasCtx.fillStyle = this._whiteKey;
-            this._canvasCtx.fillRect(0, (i + 11) * this._trackDrawHeight, this._trackDrawWidth, this._trackDrawHeight);
+            this._canvasCtx.fillRect(this._container!.scrollLeft, (i + 11) * this._trackDrawHeight, this._container!.clientWidth, this._trackDrawHeight);
         }
     }
 
     private drawBarTrack(): void {
-        if (this._barsCtx == null) { throw new Error("bars context not set."); }
-
         this._bars!.width = this._canvas!.width * this.zoom;
         const font = this._trackDrawHeight * 1.5;
 
         this._barsCtx.fillStyle = "gray";
-        this._barsCtx.fillRect(0, 0, this._bars!.width, 2 * this._trackDrawHeight);
+        //this._barsCtx.fillRect(0, 0, this._bars!.width, 2 * this._trackDrawHeight);
+        this._barsCtx.fillRect(this._container!.scrollLeft, 0, this._container!.clientWidth, 2 * this._trackDrawHeight);
 
         this._barsCtx.strokeStyle = this._blackKey;;
         this._barsCtx.lineWidth = 1;
@@ -382,13 +396,15 @@ export class CanvasComponent implements OnInit {
         let width = quarterNoteWidth * this._midiService.getTimeSignatureNumerator(1) * 4 / this._midiService.getTimeSignatureDenominator(1) * this.zoom;
         let i = 0;
 
-        for (; i < this._bars!.width; i += width) {
+        // for (; i < this._bars!.width; i += width) {
+        for (; i < this._viewRight; i += width, bar++) {
+            width = quarterNoteWidth * this._midiService.getTimeSignatureNumerator(bar) * 4 / this._midiService.getTimeSignatureDenominator(bar) * this.zoom;
+            if (bar < this._firstDrawBar) continue;
             this._barsCtx.beginPath();
             this._barsCtx.moveTo(i, 0);
             this._barsCtx.lineTo(i, 2 * this._trackDrawHeight);
             this._barsCtx.stroke();
-            width = quarterNoteWidth * this._midiService.getTimeSignatureNumerator(bar) * 4 / this._midiService.getTimeSignatureDenominator(bar) * this.zoom;
-            this._barsCtx.fillText(String(bar++), i + width / 2, font, width);
+            this._barsCtx.fillText(String(bar), i + width / 2, font, width);
         }
     }
 

@@ -130,7 +130,7 @@ export class MidiService {
                 for (let i = track.events.length - 1; i >= 0; i--) {
                     let midiEvent = track.events[i];
                     if (midiEvent.event as NoteOffEvent !== null &&
-                        (this._lastNoteOffEvent == null || midiEvent.globalTime >= this._lastNoteOffEvent.globalTime)) {
+                        (midiEvent.globalTime >= (this._lastNoteOffEvent?.globalTime ?? 0))) {
                         this._lastNoteOffEvent = midiEvent;
                         break;
                     }

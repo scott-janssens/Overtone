@@ -1,6 +1,6 @@
 .canvas-root {
-    display: grid;
-    grid-template-columns: 18px auto;
+    /* display: grid;
+    grid-template-columns: 18px auto; */
     border: 1px solid gray;
     max-height: 903px;
     overflow: hidden;
@@ -25,9 +25,9 @@
     border-right: 1px solid black;
 }
 
-.canvas {
+/* .canvas {
     transform-origin: top left;
-}
+} */
 
 .bars {
     height: 18px;

@@ -103,13 +103,13 @@ export class MidiTrack {
     }
 
     *iterateFrom(globalTime: number): Generator<MidiEvent> {
-        let i = this.binarySearch(globalTime);
+        let i = this.globalTimeBinarySearch(globalTime);
         for (; i < this._events.length; i++) {
             yield this._events[i];
         }
     }
 
-    private binarySearch(globalTime: number): number {
+    private globalTimeBinarySearch(globalTime: number): number {
         let left = 0;
         let right = this._events.length;
         let length = right - left;

@@ -20,14 +20,20 @@ export class VirtualCanvasComponent implements AfterViewInit {
   get height(): number { return this.canvas.nativeElement.height; }
   set height(value: number) {
     this.canvas.nativeElement.height = value;
-    this.container.nativeElement.style.height = value + "px";
   }
 
   get width(): number { return this.canvas.nativeElement.width }
   set width(value: number) {
     this.canvas.nativeElement.width = value;
-    this.container.nativeElement.style.width = value + "px";
   }
+
+  get scrollHeight(): number { return this.vScroll.scrollContainer.nativeElement.scrollHeight; }
+  get scrollWidth(): number { return this.hScroll.scrollContainer.nativeElement.scrollWidth; }
+  get scrollTop(): number { return this.vScroll.scrollContainer.nativeElement.scrollTop; }
+  set scrollTop(value: number) { this.vScroll.scrollContainer.nativeElement.scrollTop = value; }
+
+  get scrollLeft(): number { return this.hScroll.scrollContainer.nativeElement.scrollLeft; }
+  set scrollLeft(value: number) { this.hScroll.scrollContainer.nativeElement.scrollLeft = value; }
 
   get CanvasRenderingContext2D(): CanvasRenderingContext2D { return this.canvas.nativeElement.getContext("2d")!; }
 
@@ -36,6 +42,8 @@ export class VirtualCanvasComponent implements AfterViewInit {
   ngAfterViewInit(): void {
     this.height = this.canvas.nativeElement.clientHeight;
     this.width = this.canvas.nativeElement.clientWidth;
+    this.container.nativeElement.style.height = "100%";
+    this.container.nativeElement.style.width = "100%";
   }
 
   setDimensions(x: number, y: number): void {

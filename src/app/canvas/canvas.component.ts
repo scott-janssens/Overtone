@@ -23,27 +23,17 @@ export class CanvasComponent implements AfterViewInit {
     private readonly _pitchCount = 96;
     private _headerSize: number = 2 * this._trackDrawHeight;
     private _quarterNoteWidth: number = this._trackDrawHeight * 4;
-    // private _beatPos: number = 0;
     private _trackDrawHeightZoomed: number = this._trackDrawHeight;
 
-    // private _pitchesContainer: HTMLDivElement | undefined;
-    // private _container: HTMLDivElement | undefined;
-    // private _canvas: HTMLCanvasElement | undefined;
     private _canvasCtx!: CanvasRenderingContext2D;
     private _whiteKey: string = "#04242e";
     private _blackKey: string = "#000000";
 
-    // private _lastVirtualWidth: number = 0;
-    // private _lastVirtualHeight: number = 0;
     private get zoom(): number { return this._midiService.zoomLevel; }
     private set zoom(value: number) { 
-        this._midiService.zoomLevel = value; 
-        this._trackDrawHeightZoomed = this._trackDrawHeight * value;
-        this._octaveHeight = 12 * this._trackDrawHeightZoomed;
+        this._midiService.zoomLevel = value;
+        this.onZoom(value);
     }
-    // private _lastWheelEvent: WheelEvent | null = null;
-    // private _lastMouseX: number = -1;
-    // private _lastMouseY: number = -1;
     private _octaveHeight: number = 12 * this._trackDrawHeight;
 
     private _firstDrawBeat: number = 1;
@@ -52,7 +42,6 @@ export class CanvasComponent implements AfterViewInit {
 
     constructor(protected _midiService: MidiService) {
         _midiService.zoomLevelChange.subscribe(v => this.performZoom(v[0], v[1]));
-        //_midiService.zoomLevelChange.subscribe(v => this.redraw());
     }
 
     ngAfterViewInit(): void {
@@ -133,7 +122,13 @@ export class CanvasComponent implements AfterViewInit {
     //     comp._lastMouseY = event.clientY;
     // }
 
+    private onZoom(value: number): void {
+        this._trackDrawHeightZoomed = this._trackDrawHeight * value;
+        this._octaveHeight = 12 * this._trackDrawHeightZoomed;
+    }
+
     private performZoom(oldZoom: number, newZoom: number): void {
+        this.onZoom(newZoom);
         this.canvas.performZoom(newZoom);
     }
 
@@ -163,6 +158,8 @@ export class CanvasComponent implements AfterViewInit {
             const beatPos = this._quarterNoteWidth * this.zoom / this._midiService.midiFile!.header.ticksPerBeat;
             const startTime = this.canvas.scrollLeft / beatPos;
             const endTime = startTime + this._viewRight / beatPos;
+            const yOffset = this.canvas.scrollTop + this._headerSize;
+            const trackZoomNarrow = this._trackDrawHeightZoomed - 2;
 
             for (let event of track.iterateFrom(startTime)) {
                 if (event.event.type == "channel") {
@@ -180,9 +177,9 @@ export class CanvasComponent implements AfterViewInit {
                             let note = notes[event.event.noteNumber];
                             if (note != null) {
                                 const x = this._headerSize + beatPos * note.start;
-                                const y = (109 - note.noteNumber) * this._trackDrawHeight - this.canvas.scrollTop + this._headerSize;
+                                const y = (109 - note.noteNumber) * this._trackDrawHeightZoomed - yOffset;
                                 let width = (event.globalTime - note.start - startTime) * beatPos;
-                                this._canvasCtx.fillRect(x, y, width, this._trackDrawHeight - 2);
+                                this._canvasCtx.fillRect(x, y, width, trackZoomNarrow);
                                 notes[event.event.noteNumber] = null;
                                 this.drawOvertones(event.event.noteNumber, x, width, track.color);
                             }
@@ -213,6 +210,8 @@ export class CanvasComponent implements AfterViewInit {
             drawColor = Color(color);
         }
 
+        const yOffset = this._trackDrawHeightZoomed / 2 - this.canvas.scrollTop + this._headerSize;
+
         for (let i = 1; i < Math.min(15, sequence.length); i++) {
             let overtone = sequence[i];
 
@@ -226,8 +225,7 @@ export class CanvasComponent implements AfterViewInit {
                 this._canvasCtx.strokeStyle = drawColor.hex();
             }
 
-            const halfHeight = this._trackDrawHeight / 2;
-            let y = (109 - overtone.closestPitch.midi) * this._trackDrawHeight + halfHeight - this._trackDrawHeight * overtone.cents / 100 - this.canvas.scrollTop + this._headerSize;
+            let y = this._trackDrawHeightZoomed * (109 - overtone.closestPitch.midi - overtone.cents / 100 ) + yOffset;
 
             if (y <= this._headerSize) {
                 break;
@@ -257,9 +255,8 @@ export class CanvasComponent implements AfterViewInit {
         for (; i < this.canvas.width;
             i += this.zoom * this._quarterNoteWidth * item.timeSigNumerator * 4 / item.timeSigDenominator) {
             this._canvasCtx.beginPath();
-            let y = this._headerSize;
-            this._canvasCtx.moveTo(i, y);
-            this._canvasCtx.lineTo(i, y + this.canvas.height);
+            this._canvasCtx.moveTo(i, this._headerSize);
+            this._canvasCtx.lineTo(i, this._headerSize + this.canvas.height);
             this._canvasCtx.stroke();
             bar++;
             item = this._midiService.getMetaDataItem(bar);
@@ -272,40 +269,39 @@ export class CanvasComponent implements AfterViewInit {
         }
 
         const h2 = 2 * this._trackDrawHeightZoomed;
-        const x = this._headerSize;
-        const w = this.canvas.width;
-
+        const yOffset = this._headerSize - this.canvas.scrollTop
+        
         this._canvasCtx.fillStyle = this._whiteKey;
         this._canvasCtx.strokeStyle = "black";
 
         for (let i = 0; i < this._pitchCount; i += 12) {
-            let y = i * this._trackDrawHeightZoomed + this._headerSize - this.canvas.scrollTop;
+            let y = i * this._trackDrawHeightZoomed + yOffset;
 
             if (y + this._octaveHeight < this._headerSize || y > this.canvas.height) {
                 continue;
             }
 
-            this._canvasCtx.fillRect(x, y, w, this._trackDrawHeightZoomed);
+            this._canvasCtx.fillRect(this._headerSize, y, this.canvas.width, this._trackDrawHeightZoomed);
             this._canvasCtx.beginPath();
-            this._canvasCtx.moveTo(x, y);
+            this._canvasCtx.moveTo(this._headerSize, y);
             this._canvasCtx.lineTo(this._viewRight, y);
             this._canvasCtx.stroke();
-            this._canvasCtx.fillRect(x, y, w, this._trackDrawHeightZoomed);
+            this._canvasCtx.fillRect(this._headerSize, y, this.canvas.width, this._trackDrawHeightZoomed);
             y += h2;
-            this._canvasCtx.fillRect(x, y, w, this._trackDrawHeightZoomed);
+            this._canvasCtx.fillRect(this._headerSize, y, this.canvas.width, this._trackDrawHeightZoomed);
             y += h2;
-            this._canvasCtx.fillRect(x, y, w, this._trackDrawHeightZoomed);
+            this._canvasCtx.fillRect(this._headerSize, y, this.canvas.width, this._trackDrawHeightZoomed);
             y += h2;
-            this._canvasCtx.fillRect(x, y, w, h2);
+            this._canvasCtx.fillRect(this._headerSize, y, this.canvas.width, h2);
             this._canvasCtx.beginPath();
             y += this._trackDrawHeightZoomed;
-            this._canvasCtx.moveTo(x, y);
+            this._canvasCtx.moveTo(this._headerSize, y);
             this._canvasCtx.lineTo(this._viewRight, y);
             this._canvasCtx.stroke();
             y += h2;
-            this._canvasCtx.fillRect(x, y, w, this._trackDrawHeightZoomed);
+            this._canvasCtx.fillRect(this._headerSize, y, this.canvas.width, this._trackDrawHeightZoomed);
             y += h2;
-            this._canvasCtx.fillRect(x, y, w, this._trackDrawHeightZoomed);
+            this._canvasCtx.fillRect(this._headerSize, y, this.canvas.width, this._trackDrawHeightZoomed);
         }
     }
 

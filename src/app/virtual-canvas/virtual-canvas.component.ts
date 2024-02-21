@@ -91,8 +91,8 @@ export class VirtualCanvasComponent implements AfterViewInit {
   }
 
   private adjustScrollArea() {
-    this.container.nativeElement.style.height = this.canvas.nativeElement.height + (this.hScroll.isVisible ? 18 : 0) + "px";
-    this.canvas.nativeElement.width = this.container.nativeElement.clientWidth - (this.vScroll.isVisible ? 18 : 0);
+    this.container.nativeElement.style.height = this.canvas.nativeElement.height + (this.hScroll.isVisible ? this.hScroll.scrollbarWidth : 0) + "px";
+    this.canvas.nativeElement.width = this.container.nativeElement.clientWidth - (this.vScroll.isVisible ? this.vScroll.scrollbarWidth : 0);
     this.vScroll.scrollContainer.nativeElement.style.height = this.canvas.nativeElement.height + "px";
     this.hScroll.scrollContainer.nativeElement.style.width = this.canvas.nativeElement.width + "px";
     this.setGridClass();
@@ -156,13 +156,13 @@ export class VirtualCanvasComponent implements AfterViewInit {
     this._lastMouseY = event.clientY;
     this.canvas.nativeElement.setPointerCapture(event.pointerId);
     this.canvas.nativeElement.onpointermove = e => this.mouseMove(e);
-    this.container.nativeElement.style.cursor = "grabbing";
+    this.canvas.nativeElement.style.cursor = "grabbing";
   }
 
   mouseUp(event: PointerEvent) {
     this.canvas.nativeElement.releasePointerCapture(event.pointerId);
     this.canvas.nativeElement.onpointermove = null;
-    this.container.nativeElement.style.cursor = "grab";
+    this.canvas.nativeElement.style.cursor = "grab";
   }
 
   mouseMove(event: PointerEvent) {

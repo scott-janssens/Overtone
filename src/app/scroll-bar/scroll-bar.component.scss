@@ -3,5 +3,6 @@
 }
 
 .scroll-container {
-    overflow: auto;
+    overflow: auto !important;
+    scrollbar-width: auto !important;
 }

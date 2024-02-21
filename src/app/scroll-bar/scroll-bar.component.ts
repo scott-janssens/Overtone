@@ -14,6 +14,9 @@ export class ScrollBarComponent implements AfterViewInit {
 
   @Input() orientation: string = "Horizontal";
 
+  private static _scrollbarWidth: number = 0;
+  get scrollbarWidth(): number {return ScrollBarComponent._scrollbarWidth;}
+
   get isVisible(): boolean {
     return (this.orientation === "Vertical" && this.scrollChild.nativeElement.scrollHeight > this.scrollContainer.nativeElement.offsetHeight) ||
       (this.orientation === "Horizontal" && this.scrollChild.nativeElement.scrollWidth > this.scrollContainer.nativeElement.offsetWidth)
@@ -30,23 +33,14 @@ export class ScrollBarComponent implements AfterViewInit {
     }
   }
 
-  show(show: boolean): void {
-    const val = show ? "1px" : "0";
-
-    if (this.orientation === "Horizontal") {
-      this.scrollChild.nativeElement.style.height = val;
-    }
-    else {
-      this.scrollChild.nativeElement.style.width = val;
-    }
-  }
-
   setScrollExtent(extent: number): void {
     if (this.orientation === "Horizontal") {
       this.scrollChild.nativeElement.style.width = extent + "px";
+      ScrollBarComponent._scrollbarWidth = Math.max(ScrollBarComponent._scrollbarWidth, this.scrollContainer.nativeElement.offsetHeight - this.scrollContainer.nativeElement.clientHeight);
     }
     else {
       this.scrollChild.nativeElement.style.height = extent + "px";
+      ScrollBarComponent._scrollbarWidth = Math.max(ScrollBarComponent._scrollbarWidth, this.scrollContainer.nativeElement.offsetWidth - this.scrollContainer.nativeElement.clientWidth);
     }
   }
 }

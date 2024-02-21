@@ -1,4 +1,4 @@
-<div #container [ngClass]="gridClass">
+<div #container [ngClass]="gridClass" (pointerdown)="mouseDown($event)" (pointerup)="mouseUp($event)">
     <canvas #canvas class="canvas" id="canvas"></canvas>
     <scroll-bar #vScroll orientation="Vertical"></scroll-bar>
     <scroll-bar #hScroll></scroll-bar>

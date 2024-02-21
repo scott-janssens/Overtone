@@ -156,16 +156,19 @@ export class VirtualCanvasComponent implements AfterViewInit {
     this._lastMouseY = event.clientY;
     this.canvas.nativeElement.setPointerCapture(event.pointerId);
     this.canvas.nativeElement.onpointermove = e => this.mouseMove(e);
-    this.style.cursor = "grabbing";
+    this.container.nativeElement.style.cursor = "grabbing";
   }
 
   mouseUp(event: PointerEvent) {
     this.canvas.nativeElement.releasePointerCapture(event.pointerId);
     this.canvas.nativeElement.onpointermove = null;
-    this.style.cursor = "grab";
+    this.container.nativeElement.style.cursor = "grab";
   }
 
   mouseMove(event: PointerEvent) {
+    this.scrollLeft -= event.clientX - this._lastMouseX;
+    this.scrollTop -= event.clientY - this._lastMouseY;
+
     this._lastMouseX = event.clientX;
     this._lastMouseY = event.clientY;
   }

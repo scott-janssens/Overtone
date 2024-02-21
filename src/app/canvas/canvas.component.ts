@@ -100,28 +100,6 @@ export class CanvasComponent implements AfterViewInit {
         this.redraw();
     }
 
-    // mouseDown(event: PointerEvent) {
-    //     this._lastMouseX = event.clientX;
-    //     this._lastMouseY = event.clientY;
-    //     this.canvas.canvas.nativeElement.setPointerCapture(event.pointerId);
-    //     this.canvas.canvas.nativeElement.onpointermove = e => this.mouseMove(e, this);
-    //     this.canvas.style.cursor = "grabbing";
-    // }
-
-    // mouseUp(event: PointerEvent) {
-    //     this.canvas.canvas.nativeElement.releasePointerCapture(event.pointerId);
-    //     this.canvas.canvas.nativeElement.onpointermove = null;
-    //     this.canvas.style.cursor = "grab";
-    // }
-
-    // mouseMove(event: PointerEvent, comp: CanvasComponent) {
-    //     // comp._container!.scrollLeft -= event.clientX - comp._lastMouseX;
-    //     // comp._container!.scrollTop -= event.clientY - comp._lastMouseY;
-
-    //     comp._lastMouseX = event.clientX;
-    //     comp._lastMouseY = event.clientY;
-    // }
-
     private onZoom(value: number): void {
         this._trackDrawHeightZoomed = this._trackDrawHeight * value;
         this._octaveHeight = 12 * this._trackDrawHeightZoomed;

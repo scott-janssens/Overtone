@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, ElementRef, HostBinding, ViewChild } from '@angular/core';
 import { ScrollBarComponent } from '../scroll-bar/scroll-bar.component';
 import { NgClass } from '@angular/common';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'virtual-canvas',
@@ -17,21 +18,35 @@ export class VirtualCanvasComponent implements AfterViewInit {
 
   @HostBinding("style") style!: CSSStyleDeclaration;
 
+  private _dimensionX: number = 0;
+  private _dimensionY: number = 0;
+  private _lastWheelEvent: WheelEvent | null = null;
+  private _lastVirtualWidth: number = 0;
+  private _lastVirtualHeight: number = 0;
+  private _lastMouseX: number = -1;
+  private _lastMouseY: number = -1;
+
+  private _zoom: number = 1;
+  get zoom(): number { return this._zoom; }
+
   get height(): number { return this.canvas.nativeElement.height; }
   set height(value: number) {
     this.canvas.nativeElement.height = value;
+    this.container.nativeElement.style.height = value + "px";
+    this.vScroll.scrollContainer.nativeElement.style.height = value + "px";
   }
 
   get width(): number { return this.canvas.nativeElement.width }
   set width(value: number) {
+    this.container.nativeElement.style.width = value + "px";
     this.canvas.nativeElement.width = value;
+    this.hScroll.scrollContainer.nativeElement.style.width = value + "px";
   }
 
   get scrollHeight(): number { return this.vScroll.scrollContainer.nativeElement.scrollHeight; }
   get scrollWidth(): number { return this.hScroll.scrollContainer.nativeElement.scrollWidth; }
   get scrollTop(): number { return this.vScroll.scrollContainer.nativeElement.scrollTop; }
   set scrollTop(value: number) { this.vScroll.scrollContainer.nativeElement.scrollTop = value; }
-
   get scrollLeft(): number { return this.hScroll.scrollContainer.nativeElement.scrollLeft; }
   set scrollLeft(value: number) { this.hScroll.scrollContainer.nativeElement.scrollLeft = value; }
 
@@ -39,18 +54,52 @@ export class VirtualCanvasComponent implements AfterViewInit {
 
   gridClass: string = "canvas-container grid1x1";
 
+  onWheel: Subject<WheelEvent> = new Subject<WheelEvent>();
+
+  virtualCanvasWheelHandler(e: WheelEvent, sender: VirtualCanvasComponent): void {
+    if ((e?.target as HTMLCanvasElement)?.id == "canvas") {
+      e.preventDefault();
+
+      sender._lastWheelEvent = e;
+      let zoom = Math.min(4, sender._zoom + 0.00025 * e.deltaY);
+      zoom = Math.max(1, zoom);
+
+      if (zoom !== this._zoom) {
+        sender.performZoom(zoom);
+      }
+
+      sender._lastWheelEvent = null;
+
+      sender.onWheel.next(<WheelEvent>(e));
+    }
+  }
+
   ngAfterViewInit(): void {
+    window.addEventListener("wheel", e => this.virtualCanvasWheelHandler(e, this), { passive: false });
+
     this.height = this.canvas.nativeElement.clientHeight;
     this.width = this.canvas.nativeElement.clientWidth;
-    this.container.nativeElement.style.height = "100%";
-    this.container.nativeElement.style.width = "100%";
   }
 
   setDimensions(x: number, y: number): void {
+    this._dimensionX = x;
+    this._dimensionY = y;
+
     this.hScroll.setScrollExtent(x);
     this.vScroll.setScrollExtent(y);
+    this.adjustScrollArea();
+  }
 
-    const visible = (this.hScroll.isVisible ? 2 : 0) + (this.vScroll.isVisible ? 1 : 0);
+  private adjustScrollArea() {
+    this.container.nativeElement.style.height = this.canvas.nativeElement.height + (this.hScroll.isVisible ? 18 : 0) + "px";
+    this.canvas.nativeElement.width = this.container.nativeElement.clientWidth - (this.vScroll.isVisible ? 18 : 0);
+    this.vScroll.scrollContainer.nativeElement.style.height = this.canvas.nativeElement.height + "px";
+    this.hScroll.scrollContainer.nativeElement.style.width = this.canvas.nativeElement.width + "px";
+    this.setGridClass();
+  }
+
+  private setGridClass(): void {
+    let visible = (this.hScroll.isVisible ? 2 : 0) + (this.vScroll.isVisible ? 1 : 0);
 
     switch (visible) {
       case 0:
@@ -66,5 +115,58 @@ export class VirtualCanvasComponent implements AfterViewInit {
         this.gridClass = "canvas-container grid2x2";
         break;
     }
+  }
+
+  performZoom(newZoom: number): void {
+    if (newZoom !== this._zoom) {
+      let x: number;
+      let y: number;
+
+      if (this._lastWheelEvent != null) {
+        x = this._lastWheelEvent.clientX;
+        y = this._lastWheelEvent.clientY;
+      }
+      else {
+        x = this.canvas.nativeElement.width / 2;
+        y = this.canvas.nativeElement.height / 2
+      }
+
+      if (this._lastVirtualWidth === 0) {
+        this._lastVirtualWidth = this.hScroll.scrollContainer.nativeElement.scrollWidth;
+        this._lastVirtualHeight = this.hScroll.scrollContainer.nativeElement.scrollHeight;
+      }
+
+      this._zoom = newZoom;
+      this.hScroll.setScrollExtent(this._dimensionX * newZoom);
+      this.vScroll.setScrollExtent(this._dimensionY * newZoom);
+      this.adjustScrollArea();
+
+      const pctX = (x + this.hScroll.scrollContainer.nativeElement.scrollLeft) / this._lastVirtualWidth;
+      this.hScroll.scrollContainer.nativeElement.scrollLeft = this.hScroll.scrollContainer.nativeElement.scrollWidth * pctX - x;
+      this._lastVirtualWidth = this.hScroll.scrollContainer.nativeElement.scrollWidth;
+
+      const pctY = (y + this.vScroll.scrollContainer.nativeElement.scrollTop) / this._lastVirtualHeight;
+      this.vScroll.scrollContainer.nativeElement.scrollTop = this.vScroll.scrollContainer.nativeElement.scrollHeight * pctY - y;
+      this._lastVirtualHeight = this.vScroll.scrollContainer.nativeElement.scrollHeight;
+    }
+  }
+
+  mouseDown(event: PointerEvent) {
+    this._lastMouseX = event.clientX;
+    this._lastMouseY = event.clientY;
+    this.canvas.nativeElement.setPointerCapture(event.pointerId);
+    this.canvas.nativeElement.onpointermove = e => this.mouseMove(e);
+    this.style.cursor = "grabbing";
+  }
+
+  mouseUp(event: PointerEvent) {
+    this.canvas.nativeElement.releasePointerCapture(event.pointerId);
+    this.canvas.nativeElement.onpointermove = null;
+    this.style.cursor = "grab";
+  }
+
+  mouseMove(event: PointerEvent) {
+    this._lastMouseX = event.clientX;
+    this._lastMouseY = event.clientY;
   }
 }

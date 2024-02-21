@@ -86,7 +86,8 @@ export class MidiService {
     private _zoomLevel: number = 1;
     get zoomLevel(): number { return this._zoomLevel; }
     set zoomLevel(value: number) {
-        value = Math.round(Number(value) * 100) / 100;
+        const oldZoom = this._zoomLevel;
+        value = Math.round(Number(value) * 1000) / 1000;
         if (value < 1) {
             value = 1;
         }
@@ -96,10 +97,10 @@ export class MidiService {
 
         if (this._zoomLevel != value) {
             this._zoomLevel = value;
-            this.zoomLevelChange.next(value);
+            this.zoomLevelChange.next([oldZoom, value]);
         }
     }
-    zoomLevelChange: Subject<number> = new Subject<number>();
+    zoomLevelChange: Subject<[oldZoom: number, newZoom: number]> = new Subject<[number, number]>();
 
     private reset(): void {
         this._tracks = [];
@@ -109,22 +110,6 @@ export class MidiService {
     }
 
     get barCount(): number { return this._midiMetadata.length; }
-
-    getTimeSignatureNumerator(bar: number): number {
-        return this._midiMetadata[bar - 1].timeSigNumerator;
-    }
-
-    getTimeSignatureDenominator(bar: number): number {
-        return this._midiMetadata[bar - 1].timeSigDenominator;
-    }
-
-    getGlobalTimeAtBar(bar: number): number {
-        return this._midiMetadata[bar - 1].globalTime;
-    }
-
-    getGlobalBeatAtBar(bar: number): number {
-        return this._midiMetadata[bar - 1].globalBeat;
-    }
 
     getMetaDataItem(bar: number): MidiMetaDataItem {
         return this._midiMetadata[bar - 1];

@@ -15,16 +15,18 @@ export class ScrollBarComponent implements AfterViewInit {
   @Input() orientation: string = "Horizontal";
 
   get isVisible(): boolean {
-    return (this.orientation === "Vertical" && this.scrollContainer.nativeElement.scrollHeight > this.scrollContainer.nativeElement.clientHeight) ||
-      (this.orientation === "Horizontal" && this.scrollContainer.nativeElement.scrollWidth > this.scrollContainer.nativeElement.clientWidth)
+    return (this.orientation === "Vertical" && this.scrollChild.nativeElement.scrollHeight > this.scrollContainer.nativeElement.offsetHeight) ||
+      (this.orientation === "Horizontal" && this.scrollChild.nativeElement.scrollWidth > this.scrollContainer.nativeElement.offsetWidth)
   }
 
   ngAfterViewInit(): void {
     if (this.orientation === "Horizontal") {
       this.scrollContainer.nativeElement.style.width = "100%";
+      this.scrollChild.nativeElement.style.height = "1px";
     }
     else {
       this.scrollContainer.nativeElement.style.height = "100%";
+      this.scrollChild.nativeElement.style.width = "1px";
     }
   }
 
@@ -41,22 +43,10 @@ export class ScrollBarComponent implements AfterViewInit {
 
   setScrollExtent(extent: number): void {
     if (this.orientation === "Horizontal") {
-      if (this.scrollContainer.nativeElement.clientWidth > extent) {
-        this.scrollChild.nativeElement.style.height = "0";
-      }
-      else {
-        this.scrollChild.nativeElement.style.width = extent + "px";
-        this.scrollChild.nativeElement.style.height = "1px";
-      }
+      this.scrollChild.nativeElement.style.width = extent + "px";
     }
     else {
-      if (this.scrollContainer.nativeElement.clientHeight > extent) {
-        this.scrollChild.nativeElement.style.width = "0";
-      }
-      else {
-        this.scrollChild.nativeElement.style.height = extent + "px";
-        this.scrollChild.nativeElement.style.width = "1px";
-      }
+      this.scrollChild.nativeElement.style.height = extent + "px";
     }
   }
 }

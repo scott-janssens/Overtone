@@ -1,35 +1,33 @@
 .canvas-root {
-    /* display: grid;
-    grid-template-columns: 18px auto; */
     border: 1px solid gray;
-    // max-height: 903px;
+    //max-height: 903px;
     overflow: hidden;
 }
 
-.pitches {
-    position: relative;
-    width: 18px;
-}
+// virtual-canvas {
+//     height: 905px;
+// }
 
-.canvas-container {
-    overflow: auto;
-    scrollbar-color: gray #02141e;
-    scrollbar-width: thin;
-    // max-height: 901px;
-}
+// .pitches {
+//     position: relative;
+//     width: 18px;
+// }
 
-.canvas-corner {
-    background-color: gray;
-    height: 18px;
-    border-bottom: 1px solid black;
-    border-right: 1px solid black;
-}
+// .canvas-container {
+//     overflow: auto;
+//     scrollbar-color: gray #02141e;
+//     scrollbar-width: thin;
+//     // max-height: 901px;
+// }
 
-/* .canvas {
-    transform-origin: top left;
-} */
+// .canvas-corner {
+//     background-color: gray;
+//     height: 18px;
+//     border-bottom: 1px solid black;
+//     border-right: 1px solid black;
+// }
 
-.bars {
-    height: 18px;
-    position: relative;
-}
+// .bars {
+//     height: 18px;
+//     position: relative;
+// }

@@ -3,6 +3,11 @@
     overflow: hidden;
 }
 
+.canvas {
+    width: 0;
+    height: 0;
+}
+
 .grid1x1 {
     display: grid;
     grid-template-columns: auto 0;

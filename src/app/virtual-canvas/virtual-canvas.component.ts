@@ -32,15 +32,19 @@ export class VirtualCanvasComponent implements AfterViewInit {
   get height(): number { return this.canvas.nativeElement.height; }
   set height(value: number) {
     this.canvas.nativeElement.height = value;
+    this.canvas.nativeElement.style.height = value + "px";
     this.container.nativeElement.style.height = value + "px";
     this.vScroll.scrollContainer.nativeElement.style.height = value + "px";
+    this.adjustScrollArea();
   }
 
   get width(): number { return this.canvas.nativeElement.width }
   set width(value: number) {
-    this.container.nativeElement.style.width = value + "px";
     this.canvas.nativeElement.width = value;
+    this.canvas.nativeElement.style.width = value + "px";
+    this.container.nativeElement.style.width = value + "px";
     this.hScroll.scrollContainer.nativeElement.style.width = value + "px";
+    this.adjustScrollArea();
   }
 
   get scrollHeight(): number { return this.vScroll.scrollContainer.nativeElement.scrollHeight; }
@@ -61,7 +65,7 @@ export class VirtualCanvasComponent implements AfterViewInit {
       e.preventDefault();
 
       sender._lastWheelEvent = e;
-      let zoom = Math.min(4, sender._zoom + 0.00025 * e.deltaY);
+      let zoom = Math.min(4, sender._zoom + Math.floor(e.deltaY / 4) / 1000);
       zoom = Math.max(1, zoom);
 
       if (zoom !== this._zoom) {
@@ -91,8 +95,9 @@ export class VirtualCanvasComponent implements AfterViewInit {
   }
 
   private adjustScrollArea() {
-    this.container.nativeElement.style.height = this.canvas.nativeElement.height + (this.hScroll.isVisible ? this.hScroll.scrollbarWidth : 0) + "px";
     this.canvas.nativeElement.width = this.container.nativeElement.clientWidth - (this.vScroll.isVisible ? this.vScroll.scrollbarWidth : 0);
+    this.canvas.nativeElement.style.width = this.canvas.nativeElement.width + "px";
+    this.container.nativeElement.style.height = this.canvas.nativeElement.height + (this.hScroll.isVisible ? this.hScroll.scrollbarWidth : 0) + "px";
     this.vScroll.scrollContainer.nativeElement.style.height = this.canvas.nativeElement.height + "px";
     this.hScroll.scrollContainer.nativeElement.style.width = this.canvas.nativeElement.width + "px";
     this.setGridClass();

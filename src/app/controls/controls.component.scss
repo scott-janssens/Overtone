@@ -29,12 +29,12 @@ mat-slider {
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    padding-left: 4px;
+    padding-left: 2px;
 }
 
 .list-container {
     flex: 1 1 auto;
-    margin-top: 4px;
+    margin-top: 2px;
     overflow: auto;
     scrollbar-color: gray #02141e;
     scrollbar-width: thin;
@@ -45,7 +45,7 @@ mat-slider {
     flex: 0 1 auto;
     display: flex;
     flex-direction: column;
-    margin-top: 4px;
+    margin-top: 2px;
     padding-left: 8px;
     padding-right: 8px;
     background-color: $container-background;

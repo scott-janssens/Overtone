@@ -1,4 +1,3 @@
-import Color from "color";
 import { AnyEvent, ChannelEvent, MetaEvent, ProgramChangeEvent, TrackNameEvent } from "midifile-ts";
 import { Subject } from "rxjs";
 import { ProgramChange, ProgramChanges } from "./ProgramChanges";
@@ -19,10 +18,10 @@ export class MidiTrack {
     }
     programChange: Subject<ProgramChange | undefined> = new Subject<ProgramChange | undefined>();
 
-    private _color: Color = Color("white");
-    public get color(): string { return this._color.hex(); }
+    private _color: string = "white";
+    public get color(): string { return this._color; }
     public set color(value: string) {
-        const newColor = Color(value);
+        const newColor = value;
         if (this._color != newColor) {
             this._color = newColor;
             this.colorChange.next(this);

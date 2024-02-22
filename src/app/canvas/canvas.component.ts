@@ -64,7 +64,7 @@ export class CanvasComponent implements AfterViewInit {
         this.canvas.height = this._trackDrawHeight * this._pitchCount + this._headerSize;
         this.canvas.width = this.canvasRoot.nativeElement.clientWidth;
         this.canvas.scrollLeft = this.canvas.scrollTop = 0;
-        this.canvas.setDimensions(midiService.totalBeats * this._quarterNoteWidth, this._trackDrawHeight * this._pitchCount + this._headerSize);
+        this.canvas.setDimensions(midiService.totalBeats * this._quarterNoteWidth + this._headerSize, this._trackDrawHeight * this._pitchCount + this._headerSize);
 
         this.redraw();
     }
@@ -231,14 +231,19 @@ export class CanvasComponent implements AfterViewInit {
             item = this._midiService.getMetaDataItem(bar);
         }
 
-        for (; i < this.canvas.width;
-            i += this.zoom * this._quarterNoteWidth * item.timeSigNumerator * 4 / item.timeSigDenominator) {
+        while (i < this.canvas.width) {
             this._canvasCtx.beginPath();
             this._canvasCtx.moveTo(i, this._headerSize);
             this._canvasCtx.lineTo(i, this._headerSize + this.canvas.height);
             this._canvasCtx.stroke();
             bar++;
             item = this._midiService.getMetaDataItem(bar);
+
+            if (item == undefined) {
+                break;
+            }
+
+            i += this.zoom * this._quarterNoteWidth * item.timeSigNumerator * 4 / item.timeSigDenominator;
         }
     }
 
@@ -300,10 +305,13 @@ export class CanvasComponent implements AfterViewInit {
         let item = this._midiService.getMetaDataItem(bar);
         let width = this._quarterNoteWidth * item.timeSigNumerator * 4 / item.timeSigDenominator * this.zoom;
         let i = this._headerSize - this.canvas.scrollLeft;
+        this._canvasCtx.fillText(String(bar), i + width / 2, font, width);
 
-        for (; i < this.canvas.width; i += width, bar++, item = this._midiService.getMetaDataItem(bar)) {
+        for (; i < this.canvas.width && item != undefined; i += width, bar++, item = this._midiService.getMetaDataItem(bar)) {
             width = this._quarterNoteWidth * item.timeSigNumerator * 4 / item.timeSigDenominator * this.zoom;
-            if (bar < this._firstDrawBar) continue;
+            if (bar < this._firstDrawBar) {
+                continue;
+            }
             this._canvasCtx.beginPath();
             this._canvasCtx.moveTo(i, 0);
             this._canvasCtx.lineTo(i, this._headerSize);

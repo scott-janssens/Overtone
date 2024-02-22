@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { AnyMetaEvent, KeySignatureEvent, MidiFile, NoteOffEvent, SetTempoEvent, TimeSignatureEvent, TrackNameEvent, read } from "midifile-ts";
 import { MidiEvent, MidiTrack } from "./MidiTrack";
-import { Subject } from "rxjs";
+import { Subject, last } from "rxjs";
 import { ProgramChange } from "./ProgramChanges";
 
 // https://github.com/ryohey/midifile-ts
@@ -119,7 +119,9 @@ export class MidiService {
         let beats = 0;
 
         for (let i = 0; i + 1 < this._midiMetadata.length; i++) {
-            beats += this._midiMetadata[i].timeSigNumerator;
+            let meta = this._midiMetadata[i];
+            const beatUnit = meta.timeSigDenominator / 4;
+            beats += meta.timeSigNumerator / beatUnit;
             if (beats > beatNum) {
                 return i + 1;
             }
@@ -138,17 +140,17 @@ export class MidiService {
                 this._midiFile = read(e.target.result as ArrayBuffer);
 
                 if (this._midiFile.header.trackCount > 0) {
-                    this.getMetaData(this._midiFile);
-
                     for (let i = 1; i < this._midiFile.tracks.length; i++) {
                         let track = new MidiTrack(this._midiFile.tracks[i]);
                         track.color = this._trackColors[i % this._trackColors.length];
                         this._tracks.push(track);
                     }
+
+                    this.getMetaData(this._midiFile);
                 }
 
                 const item = this._midiMetadata[this._midiMetadata.length - 1];
-                this._totalBeats = item.globalBeat + item.timeSigNumerator - 1;        
+                this._totalBeats = item.globalBeat + item.timeSigNumerator - 1;
 
                 this.midiFileLoaded.next(this);
             }
@@ -160,6 +162,9 @@ export class MidiService {
     private getMetaData(midi: MidiFile): void {
         let metadata: MidiMetaDataItem = new MidiMetaDataItem(1, 0, 1);
         let beatPartial = 0;
+        let bars = 1;
+        let barTime = 0;
+        let globalBeat = 0;
 
         for (let event of midi.tracks[0]) {
             if (event.type === "meta") {
@@ -177,12 +182,12 @@ export class MidiService {
                     }
 
                     const fullBars = Math.floor(beats / metadata.timeSigNumerator * beatUnit);
-                    let bars = metadata.barNumber + fullBars;
+                    bars = metadata.barNumber + fullBars;
                     beatPartial = beats - fullBars * metadata.timeSigNumerator / beatUnit;
 
                     let globalTime = metadata.globalTime;
-                    let globalBeat = metadata.globalBeat
-                    let barTime = midi.header.ticksPerBeat * metadata.timeSigNumerator;
+                    globalBeat = metadata.globalBeat;
+                    barTime = midi.header.ticksPerBeat * metadata.timeSigNumerator;
 
                     this._midiMetadata.push(metadata);
                     for (let i = metadata.barNumber + 1; i < bars; i++) {
@@ -198,7 +203,31 @@ export class MidiService {
             }
         }
 
-        this._midiMetadata.push(metadata);
+        let lastGlobal = 0;
+        for (let track of this._tracks) {
+            for (let i = track.events.length - 1; i >= 0; i--) {
+                let midiEvent = track.events[i];
+                if ((midiEvent.event.type === "meta" &&
+                        midiEvent.event.subtype === "endOfTrack") ||
+                    (midiEvent.event.type === "channel" &&
+                        midiEvent.event.subtype === "noteOff")) {
+                    lastGlobal = Math.max(lastGlobal, midiEvent.globalTime);
+                    break;
+                }
+            }
+        }
+
+        const beatUnit = metadata.timeSigDenominator / 4;
+        barTime = midi.header.ticksPerBeat * metadata.timeSigNumerator / beatUnit;
+        while (metadata.globalTime < lastGlobal) {
+            this._midiMetadata.push(metadata);
+            globalBeat += metadata.timeSigNumerator / beatUnit;
+            metadata = new MidiMetaDataItem(++bars, metadata.globalTime + barTime, metadata.globalBeat + metadata.timeSigNumerator / beatUnit, metadata);
+        }
+
+        if (metadata.globalTime - barTime > lastGlobal) {
+            this._midiMetadata.push(metadata);
+        }
     }
 
     mergeTracks(trackA: MidiTrack, trackB: MidiTrack): void {

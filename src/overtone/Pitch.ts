@@ -72,7 +72,7 @@ export class Pitch {
     }
 
     public static fromMidi(midi: number): Pitch {
-        if (midi < 24 || midi > 127) {
+        if (midi < 12 || midi > 127) {
             throw new Error("MIDI value out of range for Pitch (24-127).");
         }
 

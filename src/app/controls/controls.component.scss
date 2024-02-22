@@ -1,4 +1,3 @@
-@use '@angular/material' as mat;
 @use '../../main.scss' as *;
 
 label {
@@ -51,7 +50,6 @@ mat-slider {
     max-width: 100%;
     display: block;
     background-color: $container-background;
-    @include mat.all-component-densities(-3);
 }
 
 .slider-container {

@@ -2,7 +2,7 @@ import { AfterViewInit, Component, ElementRef, ViewChild } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { OvertoneSequence } from "../../overtone/OvertoneSequence";
 import { Pitch } from "../../overtone/Pitch";
-import { MidiService, OvertoneDisplay } from "../services/midi/midi.service";
+import { MidiService, NoteDisplay, OvertoneDisplay } from "../services/midi/midi.service";
 import { MidiTrack } from "../services/midi/MidiTrack";
 import Color from "color";
 import { VirtualCanvasComponent } from "../virtual-canvas/virtual-canvas.component";
@@ -53,6 +53,7 @@ export class CanvasComponent implements AfterViewInit {
         this._midiService.overtoneDisplayChange.subscribe(e => this.redraw());
         this._midiService.centsThresholdChange.subscribe(e => this.redraw());
         this._midiService.tracksChange.subscribe(e => { this.trackManagement(); this.redraw() });
+        this._midiService.noteDisplayChange.subscribe(e => this.redraw());
         this._midiService.drawBackgroundChange.subscribe(e => this.redraw());
         this._midiService.drawMonochromeChange.subscribe(e => this.redraw());
     }
@@ -133,6 +134,9 @@ export class CanvasComponent implements AfterViewInit {
             let notes: { [Key: number]: Note | null } = {};
 
             this._canvasCtx.fillStyle = this._midiService.drawMonochrome ? "gray" : track.color;
+            this._canvasCtx.strokeStyle = this._canvasCtx.fillStyle;
+            const lastLineWidth = this._canvasCtx.lineWidth;
+            this._canvasCtx.lineWidth = 0.5;
 
             const beatPos = this._quarterNoteWidth * this.zoom / this._midiService.midiFile!.header.ticksPerBeat;
             const startTime = this.canvas.scrollLeft / beatPos;
@@ -156,9 +160,19 @@ export class CanvasComponent implements AfterViewInit {
                             let note = notes[event.event.noteNumber];
                             if (note != null) {
                                 const x = this._headerSize + beatPos * note.start;
-                                const y = (119 - note.noteNumber) * this._trackDrawHeightZoomed + yOffset;
                                 let width = (event.globalTime - note.start - startTime) * beatPos;
-                                this._canvasCtx.fillRect(x, y, width, trackZoomNarrow);
+
+                                if (this._midiService.noteDisplay !== NoteDisplay.Hidden) {
+                                    const y = (119 - note.noteNumber) * this._trackDrawHeightZoomed + yOffset;
+
+                                    if (this._midiService.noteDisplay === NoteDisplay.Filled) {
+                                        this._canvasCtx.fillRect(x, y, width, trackZoomNarrow);
+                                    }
+                                    else {
+                                        this._canvasCtx.strokeRect(x, y, width, trackZoomNarrow);
+                                    }
+                                }
+
                                 notes[event.event.noteNumber] = null;
                                 this._overtones.push(new OvertoneItem(event.event.noteNumber, x, width, track.color));
                             }
@@ -168,6 +182,8 @@ export class CanvasComponent implements AfterViewInit {
                     }
                 }
             }
+
+            this._canvasCtx.lineWidth = lastLineWidth;
         }
     }
 

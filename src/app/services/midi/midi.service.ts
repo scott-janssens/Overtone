@@ -53,6 +53,16 @@ export class MidiService {
     }
     overtoneDisplayChange: Subject<OvertoneDisplay> = new Subject<OvertoneDisplay>();
 
+    private _noteDisplay: NoteDisplay = NoteDisplay.Filled;
+    get noteDisplay(): NoteDisplay { return this._noteDisplay }
+    set noteDisplay(value: NoteDisplay) {
+        if (this._noteDisplay != value) {
+            this._noteDisplay = value;
+            this.noteDisplayChange.next(value);
+        }
+    }
+    noteDisplayChange: Subject<NoteDisplay> = new Subject<NoteDisplay>();
+
     private _drawBackground: boolean = true;
     get drawBackground(): boolean { return this._drawBackground }
     set drawBackground(value: boolean) {
@@ -385,4 +395,10 @@ export enum OvertoneDisplay {
     Frequency = 1,
     CentsOffset,
     Chord
+}
+
+export enum NoteDisplay {
+    Filled = 1,
+    Outline,
+    Hidden
 }

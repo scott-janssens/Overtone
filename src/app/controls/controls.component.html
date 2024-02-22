@@ -78,6 +78,13 @@
             <span class="slider-value">{{model.zoomLevel}}</span>
         </div>
         <mat-divider></mat-divider>
+        <mat-radio-group [(ngModel)]="model.noteDisplay">
+            <Label>Notes:</Label>
+            <mat-radio-button [value]="NoteDisplayEnum.Filled">Filled</mat-radio-button>
+            <mat-radio-button [value]="NoteDisplayEnum.Outline">Outline</mat-radio-button>
+            <mat-radio-button [value]="NoteDisplayEnum.Hidden">Hide</mat-radio-button>
+        </mat-radio-group>
+
         <mat-checkbox [(ngModel)]="model.drawBackground">Draw Background</mat-checkbox>
         <mat-checkbox [(ngModel)]="model.drawMonochrome">Draw Monochrome</mat-checkbox>
     </div>

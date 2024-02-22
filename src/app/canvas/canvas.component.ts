@@ -4,7 +4,6 @@ import { OvertoneSequence } from "../../overtone/OvertoneSequence";
 import { Pitch } from "../../overtone/Pitch";
 import { MidiService, NoteDisplay, OvertoneDisplay } from "../services/midi/midi.service";
 import { MidiTrack } from "../services/midi/MidiTrack";
-import Color from "color";
 import { VirtualCanvasComponent } from "../virtual-canvas/virtual-canvas.component";
 
 @Component({
@@ -188,37 +187,38 @@ export class CanvasComponent implements AfterViewInit {
     }
 
     private drawOvertones(): void {
+        const lastLineWidth = this._canvasCtx.lineWidth;
+        this._canvasCtx.lineWidth = 1;
+
         for (let item of this._overtones) {
             item.color = this._midiService.drawMonochrome ? "gray" : item.color;
 
             const sequence = new OvertoneSequence(Pitch.fromMidi(item.midiNote).frequency, 8372);
 
             this._canvasCtx.lineWidth = 1;
-            let drawColor: Color;
-            let greenColor: Color;
-            let redColor: Color;
+            let drawColor: string;
+            let greenColor!: string;
+            let redColor!: string;
 
             if (this._midiService.overtoneDisplay == OvertoneDisplay.CentsOffset) {
-                greenColor = this._midiService.drawMonochrome ? Color(item.color) : Color("lime");
-                redColor = Color("red");
+                greenColor = this._midiService.drawMonochrome ? item.color : "lime";
+                redColor = "red";
             }
             else {
-                drawColor = Color(item.color);
+                drawColor = item.color;
             }
 
             const yOffset = this._trackDrawHeightZoomed / 2 - this.canvas.scrollTop + this._headerSize;
 
             for (let i = 1; i < Math.min(15, sequence.length); i++) {
                 let overtone = sequence[i];
+                this._canvasCtx.lineWidth *= 0.8;
 
                 if (this._midiService.overtoneDisplay == OvertoneDisplay.CentsOffset) {
-                    greenColor = greenColor!.darken(0.1);
-                    redColor = redColor!.darken(0.15);
-                    this._canvasCtx.strokeStyle = this._midiService.centsThreshold > Math.abs(overtone.cents) ? greenColor.hex() : redColor.hex();
+                    this._canvasCtx.strokeStyle = this._midiService.centsThreshold > Math.abs(overtone.cents) ? greenColor : redColor;
                 }
                 else {
-                    drawColor = drawColor!.darken(0.15);
-                    this._canvasCtx.strokeStyle = drawColor.hex();
+                    this._canvasCtx.strokeStyle = drawColor!;
                 }
 
                 let y = this._trackDrawHeightZoomed * (119 - overtone.closestPitch.midi - overtone.cents / 100) + yOffset;
@@ -234,7 +234,8 @@ export class CanvasComponent implements AfterViewInit {
             }
         }
 
-        this._overtones = [];
+        this._overtones = [];        
+        this._canvasCtx.lineWidth = lastLineWidth;
     }
 
     private drawBarLines(): void {

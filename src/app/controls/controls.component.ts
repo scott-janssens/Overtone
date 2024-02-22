@@ -27,6 +27,7 @@ export class ControlsComponent {
 
     drop(event: CdkDragDrop<MidiTrack[]>) {
         moveItemInArray(this.model.tracks, event.previousIndex, event.currentIndex);
+        this.model.tracksChange.next(this.model);
     }
 
     @ViewChild(MatMenuTrigger) contextMenu!: MatMenuTrigger;

@@ -119,7 +119,7 @@ export class CanvasComponent implements AfterViewInit {
         this.drawBackground();
         this.drawBarLines();
 
-        for (let i = 0; i < this._midiService.tracks.length; i++) {
+        for (let i = this._midiService.tracks.length - 1; i >= 0; i--) {
             this.drawMidiTrack(this._midiService.tracks[i]);
         }
 

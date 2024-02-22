@@ -24,9 +24,8 @@
                     (click)="model.mergeTrackInstrument(track.program.instrument)">Merge
                     {{track.program?.instrument}} Tracks</button>
                 <button mat-menu-item *ngIf="anyTrackInstruments()" (click)="model.mergeTrackInstruments()">Merge
-                    by Instruments</button>
-                <button mat-menu-item *ngIf="anyTrackTypes()" (click)="model.mergeTrackTypes()">Merge by Track
-                    Types</button>
+                    by Instrument</button>
+                <button mat-menu-item *ngIf="anyTrackTypes()" (click)="model.mergeTrackTypes()">Merge by Type</button>
                 <button mat-menu-item *ngIf="model.tracks.length > 1" (click)="onMenuMergeUp(track)"
                     (click)="model.mergeAll()">Merge All Tracks</button>
                 <mat-divider></mat-divider>

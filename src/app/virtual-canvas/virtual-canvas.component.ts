@@ -17,7 +17,7 @@ export class VirtualCanvasComponent implements AfterViewInit {
   @ViewChild("hScroll") hScroll!: ScrollBarComponent;
 
   @HostBinding("style") style!: CSSStyleDeclaration;
-
+  
   private _dimensionX: number = 0;
   private _dimensionY: number = 0;
   private _lastWheelEvent: WheelEvent | null = null;

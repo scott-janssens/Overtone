@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, ViewChild } from "@angular/core";
+import { AfterViewInit, Component, ElementRef, HostListener, ViewChild } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { OvertoneSequence } from "../../overtone/OvertoneSequence";
 import { Pitch } from "../../overtone/Pitch";
@@ -16,6 +16,13 @@ import { VirtualCanvasComponent } from "../virtual-canvas/virtual-canvas.compone
 export class CanvasComponent implements AfterViewInit {
     @ViewChild("canvasRoot") canvasRoot!: ElementRef<HTMLDivElement>;
     @ViewChild("canvas") canvas!: VirtualCanvasComponent;
+
+    @HostListener('window:resize', ['$event'])
+    onResize(event: Event) {
+        this.canvas.height = this._trackDrawHeight * this._pitchCount + this._headerSize;
+        this.canvas.width = this.canvasRoot.nativeElement.clientWidth;
+        this.redraw();
+    }
 
     private readonly _trackDrawHeight = 9;
     private readonly _pitchCount = 96;
@@ -234,7 +241,7 @@ export class CanvasComponent implements AfterViewInit {
             }
         }
 
-        this._overtones = [];        
+        this._overtones = [];
         this._canvasCtx.lineWidth = lastLineWidth;
     }
 

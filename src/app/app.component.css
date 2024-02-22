@@ -6,10 +6,12 @@ main {
 .app {
     display: flex;
     height: 100%;
+    width: 100%;
 }
 
 .workspace {
     flex: 0 1 80%;
+    min-width: 0;
 }
 
 .control-panel {

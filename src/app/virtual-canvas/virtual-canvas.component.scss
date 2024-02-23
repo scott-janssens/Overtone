@@ -1,0 +1,33 @@
+.canvas-container {
+    height: 100%;
+    overflow: hidden;
+}
+
+.canvas {
+    width: 0;
+    height: 0;
+}
+
+.grid1x1 {
+    display: grid;
+    grid-template-columns: auto 0;
+    grid-template-rows: auto 0;
+}
+
+.grid2x2 {
+    display: grid;
+    grid-template-columns: auto 18px;
+    grid-template-rows: auto 18px;
+}
+
+.grid2x1 {
+    display: grid;
+    grid-template-columns: auto 18px;
+    grid-template-rows: auto 0;
+}
+
+.grid1x2 {
+    display: grid;
+    grid-template-columns: auto 0;
+    grid-template-rows: auto 18px;
+}

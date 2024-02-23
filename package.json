@@ -21,7 +21,6 @@
     "@angular/platform-browser-dynamic": "^17.1.0",
     "@angular/router": "^17.1.0",
     "@types/color": "^3.0.6",
-    "color": "^4.2.3",
     "midifile-ts": "^1.5.1",
     "ngx-color-picker": "^16.0.0",
     "rxjs": "~7.8.0",

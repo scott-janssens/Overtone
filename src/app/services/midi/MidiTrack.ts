@@ -1,4 +1,3 @@
-import Color from "color";
 import { AnyEvent, ChannelEvent, MetaEvent, ProgramChangeEvent, TrackNameEvent } from "midifile-ts";
 import { Subject } from "rxjs";
 import { ProgramChange, ProgramChanges } from "./ProgramChanges";
@@ -19,10 +18,10 @@ export class MidiTrack {
     }
     programChange: Subject<ProgramChange | undefined> = new Subject<ProgramChange | undefined>();
 
-    private _color: Color = Color("white");
-    public get color(): string { return this._color.hex(); }
+    private _color: string = "white";
+    public get color(): string { return this._color; }
     public set color(value: string) {
-        const newColor = Color(value);
+        const newColor = value;
         if (this._color != newColor) {
             this._color = newColor;
             this.colorChange.next(this);
@@ -100,6 +99,49 @@ export class MidiTrack {
         }
 
         return newTrack;
+    }
+
+    *iterateFrom(globalTime: number): Generator<MidiEvent> {
+        let i = this.globalTimeBinarySearch(globalTime);
+        for (; i < this._events.length; i++) {
+            yield this._events[i];
+        }
+    }
+
+    private globalTimeBinarySearch(globalTime: number): number {
+        let left = 0;
+        let right = this._events.length;
+        let length = right - left;
+        let i = Math.floor(length / 2);
+
+        while (left < right) {
+            if (this._events[i].globalTime === globalTime) {
+                break;
+            }
+
+            if (globalTime < this._events[i].globalTime) {
+                if (right === i) {
+                    break;
+                }
+
+                right = i;
+            }
+            else {
+                if (left === i) {
+                    break;
+                }
+                left = i;
+            }
+
+            length = right - left;
+            i = left + Math.floor(length / 2);
+        }
+
+        while (i > 0 && this._events[i].globalTime >= globalTime) {
+            i--;
+        }
+
+        return i;
     }
 }
 

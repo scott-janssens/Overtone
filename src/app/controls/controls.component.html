@@ -24,9 +24,8 @@
                     (click)="model.mergeTrackInstrument(track.program.instrument)">Merge
                     {{track.program?.instrument}} Tracks</button>
                 <button mat-menu-item *ngIf="anyTrackInstruments()" (click)="model.mergeTrackInstruments()">Merge
-                    by Instruments</button>
-                <button mat-menu-item *ngIf="anyTrackTypes()" (click)="model.mergeTrackTypes()">Merge by Track
-                    Types</button>
+                    by Instrument</button>
+                <button mat-menu-item *ngIf="anyTrackTypes()" (click)="model.mergeTrackTypes()">Merge by Type</button>
                 <button mat-menu-item *ngIf="model.tracks.length > 1" (click)="onMenuMergeUp(track)"
                     (click)="model.mergeAll()">Merge All Tracks</button>
                 <mat-divider></mat-divider>
@@ -42,43 +41,51 @@
         </mat-radio-group>
         <div>
             <div class="slider-container" *ngIf="model.overtoneDisplay === OvertoneDisplayEnum.Frequency">
-                <label class="slider-label label-disabled">Overtones</label>
+                <label class="slider-label label-disabled" for="freq-slider">Overtones</label>
                 <div class="slider">
                     <mat-slider disabled="true" min="0" max="1">
-                        <input matSliderThumb [value]="0">
+                        <input name="freq-slider" matSliderThumb [value]="0">
                     </mat-slider>
                 </div>
                 <span class="slider-value"></span>
             </div>
             <div class="slider-container" *ngIf="model.overtoneDisplay === OvertoneDisplayEnum.CentsOffset">
-                <label class="slider-label">Overtones</label>
+                <label class="slider-label" for="cents-slider">Overtones</label>
                 <div class="slider">
                     <mat-slider min="0" max="50" [(ngModel)]="model.centsThreshold" ngDefaultControl>
-                        <input matSliderThumb [value]="model.centsThreshold">
+                        <input name="cents-slider" matSliderThumb [value]="model.centsThreshold">
                     </mat-slider>
                 </div>
                 <span class="slider-value">{{model.centsThreshold}}</span>
             </div>
             <div class="slider-container" *ngIf="model.overtoneDisplay === OvertoneDisplayEnum.Chord">
-                <label class="slider-label">Overtones</label>
+                <label class="slider-label" for="chords-slider">Overtones</label>
                 <div class="slider">
                     <mat-slider min="5" max="13" step="2" [(ngModel)]="model.centsThreshold" ngDefaultControl>
-                        <input matSliderThumb [value]="5">
+                        <input name="chords-slider" matSliderThumb [value]="5">
                     </mat-slider>
                 </div>
                 <span class="slider-value">5</span>
             </div>
         </div>
         <div class="slider-container">
-            <label class="slider-label">Zoom</label>
+            <label class="slider-label" for="zoom-slider">Zoom</label>
             <div class="slider">
                 <mat-slider min="1" max="4" step="0.025" [(ngModel)]="model.zoomLevel" ngDefaultControl>
-                    <input matSliderThumb [value]="model.zoomLevel">
+                    <input name="zoom-slider" matSliderThumb [value]="model.zoomLevel">
                 </mat-slider>
             </div>
             <span class="slider-value">{{model.zoomLevel}}</span>
         </div>
         <mat-divider></mat-divider>
+        <mat-radio-group [(ngModel)]="model.noteDisplay">
+            <Label>Notes:
+                <mat-radio-button [value]="NoteDisplayEnum.Filled">Filled</mat-radio-button>
+                <mat-radio-button [value]="NoteDisplayEnum.Outline">Outline</mat-radio-button>
+                <mat-radio-button [value]="NoteDisplayEnum.Hidden">Hide</mat-radio-button>
+            </Label>
+        </mat-radio-group>
+
         <mat-checkbox [(ngModel)]="model.drawBackground">Draw Background</mat-checkbox>
         <mat-checkbox [(ngModel)]="model.drawMonochrome">Draw Monochrome</mat-checkbox>
     </div>

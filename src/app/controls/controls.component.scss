@@ -1,5 +1,10 @@
-@use '@angular/material' as mat;
 @use '../../main.scss' as *;
+
+:host {
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+}
 
 label {
     cursor: pointer;
@@ -21,15 +26,15 @@ mat-slider {
 }
 
 .controls-container {
-    height: 100%;
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    padding-left: 4px;
+    padding-left: 2px;
 }
 
 .list-container {
     flex: 1 1 auto;
-    margin-top: 4px;
+    margin-top: 2px;
     overflow: auto;
     scrollbar-color: gray #02141e;
     scrollbar-width: thin;
@@ -37,11 +42,10 @@ mat-slider {
 }
 
 .controls {
-    flex: 0 0 auto;
-    height: 280px;
+    flex: 0 1 auto;
     display: flex;
     flex-direction: column;
-    margin-top: 4px;
+    margin-top: 2px;
     padding-left: 8px;
     padding-right: 8px;
     background-color: $container-background;
@@ -51,7 +55,6 @@ mat-slider {
     max-width: 100%;
     display: block;
     background-color: $container-background;
-    @include mat.all-component-densities(-3);
 }
 
 .slider-container {

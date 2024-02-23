@@ -9,7 +9,7 @@ import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { TrackItemComponent } from "./track-item.component";
 import { CdkDragDrop, CdkDropList, CdkDrag, moveItemInArray } from '@angular/cdk/drag-drop';
-import { MidiService, OvertoneDisplay } from "../services/midi/midi.service";
+import { MidiService, NoteDisplay, OvertoneDisplay } from "../services/midi/midi.service";
 import { MidiTrack } from "../services/midi/MidiTrack";
 
 @Component({
@@ -21,12 +21,14 @@ import { MidiTrack } from "../services/midi/MidiTrack";
 })
 export class ControlsComponent {
     OvertoneDisplayEnum = OvertoneDisplay;
+    NoteDisplayEnum = NoteDisplay;
 
     constructor(readonly model: MidiService) {
     }
 
     drop(event: CdkDragDrop<MidiTrack[]>) {
         moveItemInArray(this.model.tracks, event.previousIndex, event.currentIndex);
+        this.model.tracksChange.next(this.model);
     }
 
     @ViewChild(MatMenuTrigger) contextMenu!: MatMenuTrigger;

@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
-import { AnyMetaEvent, MidiFile, NoteOffEvent, SetTempoEvent, TimeSignatureEvent, TrackNameEvent, read } from "midifile-ts";
+import { AnyMetaEvent, KeySignatureEvent, MidiFile, NoteOffEvent, SetTempoEvent, TimeSignatureEvent, TrackNameEvent, read } from "midifile-ts";
 import { MidiEvent, MidiTrack } from "./MidiTrack";
-import { Subject } from "rxjs";
+import { Subject, last } from "rxjs";
 import { ProgramChange } from "./ProgramChanges";
 
 // https://github.com/ryohey/midifile-ts
@@ -11,8 +11,7 @@ import { ProgramChange } from "./ProgramChanges";
     providedIn: "root"
 })
 export class MidiService {
-    private _midiMetadata: MidiMetadata[] = [];
-    private _lastNoteOffEvent: MidiEvent | null = null;
+    private _midiMetadata: MidiMetaDataItem[] = [];
     private _trackColors: string[] = [
         "#ffff00",
         "#ff00ff",
@@ -31,7 +30,7 @@ export class MidiService {
     private _midiFile: MidiFile | undefined;
     get midiFile(): MidiFile | undefined { return this._midiFile; }
     get isMidiLoaded(): boolean { return this.midiFile != undefined; }
-    midiFileLoaded: Subject<MidiService> = new Subject<MidiService>();
+    midiFileLoaded: Subject<MidiService | null> = new Subject<MidiService | null>();
 
     private _title: string = "";
     get title() { return this._title; }
@@ -39,6 +38,9 @@ export class MidiService {
     private _tracks: MidiTrack[] = [];
     get tracks(): MidiTrack[] { return this._tracks; }
     tracksChange: Subject<MidiService> = new Subject<MidiService>();
+
+    private _totalBeats: number = 0;
+    get totalBeats(): number { return this._totalBeats; }
 
     private _overtoneDisplay: OvertoneDisplay = OvertoneDisplay.Frequency;
     get overtoneDisplay(): OvertoneDisplay { return this._overtoneDisplay; }
@@ -49,6 +51,16 @@ export class MidiService {
         }
     }
     overtoneDisplayChange: Subject<OvertoneDisplay> = new Subject<OvertoneDisplay>();
+
+    private _noteDisplay: NoteDisplay = NoteDisplay.Filled;
+    get noteDisplay(): NoteDisplay { return this._noteDisplay }
+    set noteDisplay(value: NoteDisplay) {
+        if (this._noteDisplay != value) {
+            this._noteDisplay = value;
+            this.noteDisplayChange.next(value);
+        }
+    }
+    noteDisplayChange: Subject<NoteDisplay> = new Subject<NoteDisplay>();
 
     private _drawBackground: boolean = true;
     get drawBackground(): boolean { return this._drawBackground }
@@ -83,7 +95,8 @@ export class MidiService {
     private _zoomLevel: number = 1;
     get zoomLevel(): number { return this._zoomLevel; }
     set zoomLevel(value: number) {
-        value = Math.round(Number(value) * 100) / 100;
+        const oldZoom = this._zoomLevel;
+        value = Math.round(Number(value) * 1000) / 1000;
         if (value < 1) {
             value = 1;
         }
@@ -93,64 +106,41 @@ export class MidiService {
 
         if (this._zoomLevel != value) {
             this._zoomLevel = value;
-            this.zoomLevelChange.next(value);
+            this.zoomLevelChange.next([oldZoom, value]);
         }
     }
-    zoomLevelChange: Subject<number> = new Subject<number>();
+    zoomLevelChange: Subject<[oldZoom: number, newZoom: number]> = new Subject<[number, number]>();
 
     private reset(): void {
+        this._midiFile = undefined;
         this._tracks = [];
         this._title = "";
         this._midiMetadata = [];
-        this._lastNoteOffEvent = null;
+        this._totalBeats = 0;
     }
 
-    getTempo(bar: number): number {
-        return this.getMetdataNode(bar).bpm;
+    get barCount(): number { return this._midiMetadata.length; }
+
+    getMetaDataItem(bar: number): MidiMetaDataItem {
+        return this._midiMetadata[bar - 1];
     }
 
-    getTimeSignatureNumerator(bar: number): number {
-        return this.getMetdataNode(bar).timeSigNumerator;
-    }
+    getBarFromBeat(beatNum: number): number {
+        let beats = 0;
 
-    getTimeSignatureDenominator(bar: number): number {
-        return this.getMetdataNode(bar).timeSigDenominator;
-    }
-
-    getTotalBeats(): number {
-        if (this._lastNoteOffEvent === null) {
-            for (let track of this._tracks) {
-                for (let i = track.events.length - 1; i >= 0; i--) {
-                    let midiEvent = track.events[i];
-                    if (midiEvent.event as NoteOffEvent !== null &&
-                        (this._lastNoteOffEvent == null || midiEvent.globalTime >= this._lastNoteOffEvent.globalTime)) {
-                        this._lastNoteOffEvent = midiEvent;
-                        break;
-                    }
-                }
+        for (let i = 0; i + 1 < this._midiMetadata.length; i++) {
+            let meta = this._midiMetadata[i];
+            const beatUnit = meta.timeSigDenominator / 4;
+            beats += meta.timeSigNumerator / beatUnit;
+            if (beats > beatNum) {
+                return i + 1;
             }
         }
 
-        const beats = this._lastNoteOffEvent!.globalTime / this._midiFile!.header.ticksPerBeat;
-
-        return beats;
+        return -1;
     }
 
-    private getMetdataNode(bar: number): MidiMetadata {
-        let i = 0;
-
-        if (this._midiMetadata.length > 1) {
-            for (; i + 1 < this._midiMetadata.length; i++) {
-                if (bar < this._midiMetadata[i + 1].barNumber) {
-                    break;
-                }
-            }
-        }
-
-        return this._midiMetadata[i];
-    }
-
-    loadMidiFile(file: File) {
+    loadMidiFile(file: File): void {
         this.reset();
         const reader = new FileReader();
         reader.onload = e => {
@@ -160,14 +150,17 @@ export class MidiService {
                 this._midiFile = read(e.target.result as ArrayBuffer);
 
                 if (this._midiFile.header.trackCount > 0) {
-                    this.getMetaData(this._midiFile);
-
                     for (let i = 1; i < this._midiFile.tracks.length; i++) {
                         let track = new MidiTrack(this._midiFile.tracks[i]);
                         track.color = this._trackColors[i % this._trackColors.length];
                         this._tracks.push(track);
                     }
+
+                    this.getMetaData(this._midiFile);
                 }
+
+                const item = this._midiMetadata[this._midiMetadata.length - 1];
+                this._totalBeats = item.globalBeat + item.timeSigNumerator - 1;
 
                 this.midiFileLoaded.next(this);
             }
@@ -176,37 +169,80 @@ export class MidiService {
         reader.readAsArrayBuffer(file);
     }
 
+    abortLoad(): void {
+        this.reset();
+        this.midiFileLoaded.next(null);
+    }
+
     private getMetaData(midi: MidiFile): void {
-        let metadata: MidiMetadata = new MidiMetadata(1);
+        let metadata: MidiMetaDataItem = new MidiMetaDataItem(1, 0, 1);
+        let beatPartial = 0;
+        let bars = 1;
+        let barTime = 0;
+        let globalBeat = 0;
 
         for (let event of midi.tracks[0]) {
-            if (event.deltaTime > 0) {
-                this._midiMetadata.push(metadata);
-                const beats = event.deltaTime / midi.header.ticksPerBeat;
-                const bars = beats / metadata.timeSigNumerator * metadata.timeSigDenominator / 4;
-                metadata = new MidiMetadata(metadata.barNumber + bars, metadata);
-            }
+            if (event.type === "meta") {
+                if (event.subtype === "trackName") {
+                    this._title = event.text;
+                }
+                else if (event.deltaTime > 0) {
+                    const beats = beatPartial + event.deltaTime / midi.header.ticksPerBeat;
+                    const beatUnit = metadata.timeSigDenominator / 4;
 
-            if (event.type == "meta") {
-                let meta = event as AnyMetaEvent;
-                switch (meta.subtype) {
-                    case "trackName":
-                        this._title = (meta as TrackNameEvent).text;
-                        break;
-                    case "setTempo":
-                        metadata.tempo = (meta as SetTempoEvent).microsecondsPerBeat;
-                        metadata.bpm = Math.round(60000000 / metadata.tempo);
-                        break;
-                    case "timeSignature":
-                        let sig = meta as TimeSignatureEvent;
-                        metadata.timeSigNumerator = sig.numerator
-                        metadata.timeSigDenominator = sig.denominator;
-                        break;
+                    if (beats * beatUnit < metadata.timeSigNumerator) {
+                        metadata.applyEvent(event);
+                        beatPartial = beats;
+                        continue;
+                    }
+
+                    const fullBars = Math.floor(beats / metadata.timeSigNumerator * beatUnit);
+                    bars = metadata.barNumber + fullBars;
+                    beatPartial = beats - fullBars * metadata.timeSigNumerator / beatUnit;
+
+                    let globalTime = metadata.globalTime;
+                    globalBeat = metadata.globalBeat;
+                    barTime = midi.header.ticksPerBeat * metadata.timeSigNumerator;
+
+                    this._midiMetadata.push(metadata);
+                    for (let i = metadata.barNumber + 1; i < bars; i++) {
+                        globalTime += barTime;
+                        globalBeat += metadata.timeSigNumerator / beatUnit;
+                        this._midiMetadata.push(new MidiMetaDataItem(i, globalTime, globalBeat, metadata));
+                    }
+
+                    metadata = new MidiMetaDataItem(bars, globalTime + barTime, globalBeat + metadata.timeSigNumerator / beatUnit, metadata);
+                }
+
+                metadata.applyEvent(event);
+            }
+        }
+
+        let lastGlobal = 0;
+        for (let track of this._tracks) {
+            for (let i = track.events.length - 1; i >= 0; i--) {
+                let midiEvent = track.events[i];
+                if ((midiEvent.event.type === "meta" &&
+                        midiEvent.event.subtype === "endOfTrack") ||
+                    (midiEvent.event.type === "channel" &&
+                        midiEvent.event.subtype === "noteOff")) {
+                    lastGlobal = Math.max(lastGlobal, midiEvent.globalTime);
+                    break;
                 }
             }
         }
 
-        this._midiMetadata.push(metadata);
+        const beatUnit = metadata.timeSigDenominator / 4;
+        barTime = midi.header.ticksPerBeat * metadata.timeSigNumerator / beatUnit;
+        while (metadata.globalTime < lastGlobal) {
+            this._midiMetadata.push(metadata);
+            globalBeat += metadata.timeSigNumerator / beatUnit;
+            metadata = new MidiMetaDataItem(++bars, metadata.globalTime + barTime, metadata.globalBeat + metadata.timeSigNumerator / beatUnit, metadata);
+        }
+
+        if (metadata.globalTime - barTime > lastGlobal) {
+            this._midiMetadata.push(metadata);
+        }
     }
 
     mergeTracks(trackA: MidiTrack, trackB: MidiTrack): void {
@@ -313,22 +349,50 @@ export class MidiService {
     }
 }
 
-class MidiMetadata {
+class MidiMetaDataItem {
     barNumber: number;
-    deltaTime: number = 0;
+    globalTime: number;
+    globalBeat: number;
     timeSigNumerator: number = 4;
     timeSigDenominator: number = 4;
-    tempo: number = 0;
-    bpm: number = 120;
+    keySignature: KeySignature = KeySignature.C_MAJOR;
 
-    constructor(barNumber: number, prev: MidiMetadata | null = null) {
+    constructor(barNumber: number, globaltime: number, globalBeat: number, prev: MidiMetaDataItem | null = null) {
         this.barNumber = barNumber;
+        this.globalTime = globaltime;
+        this.globalBeat = globalBeat;
 
         if (prev != null) {
             this.timeSigNumerator = prev.timeSigNumerator;
             this.timeSigDenominator = prev.timeSigDenominator;
-            this.tempo = prev.tempo;
         }
+    }
+
+    applyEvent(event: AnyMetaEvent): void {
+        let meta = event as AnyMetaEvent;
+        switch (meta.subtype) {
+            case "keySignature":
+                this.keySignature = new KeySignature(meta.key, meta.scale);
+                break;
+            case "timeSignature":
+                this.timeSigNumerator = meta.numerator
+                this.timeSigDenominator = meta.denominator;
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+export class KeySignature {
+    readonly keyAccidentals: number = 0;
+    readonly keyScale: number = 0;
+
+    static C_MAJOR: KeySignature = new KeySignature(0, 0);
+
+    constructor(keyAccidentals: number, keyScale: number) {
+        this.keyAccidentals = keyAccidentals;
+        this.keyScale = keyScale;
     }
 }
 
@@ -336,4 +400,10 @@ export enum OvertoneDisplay {
     Frequency = 1,
     CentsOffset,
     Chord
+}
+
+export enum NoteDisplay {
+    Filled = 1,
+    Outline,
+    Hidden
 }

@@ -110,7 +110,13 @@ mat-slider {
 
 .beta {
     position: absolute;
+    right: 48px;
+    bottom: 11px;
+    font-family: Roboto, sans-serif;
+}
+
+.help {
+    position: absolute;
     right: 16px;
     bottom: 8px;
-    font-family: Roboto, sans-serif;
 }

@@ -1,4 +1,4 @@
-import { Component, NO_ERRORS_SCHEMA, ViewChild } from "@angular/core";
+import { Component, ViewChild } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LoadMidiFileComponent } from "../file/load-midi-file.component";
@@ -11,19 +11,21 @@ import { TrackItemComponent } from "./track-item.component";
 import { CdkDragDrop, CdkDropList, CdkDrag, moveItemInArray } from '@angular/cdk/drag-drop';
 import { MidiService, NoteDisplay, OvertoneDisplay } from "../services/midi/midi.service";
 import { MidiTrack } from "../services/midi/MidiTrack";
+import { MatIcon } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 @Component({
     selector: "ot-controls",
     templateUrl: "./controls.component.html",
     styleUrl: "./controls.component.scss",
-    imports: [CdkDropList, CdkDrag, LoadMidiFileComponent, TrackItemComponent, MatSliderModule, MatRadioModule, MatCheckbox, MatMenuModule, MatMenuTrigger, MatDividerModule, CommonModule, FormsModule],
+    imports: [CdkDropList, CdkDrag, LoadMidiFileComponent, TrackItemComponent, MatSliderModule, MatRadioModule, MatCheckbox, MatMenuModule, MatMenuTrigger, MatDividerModule, CommonModule, FormsModule, MatIcon, MatDialogModule],
     standalone: true
 })
 export class ControlsComponent {
     OvertoneDisplayEnum = OvertoneDisplay;
     NoteDisplayEnum = NoteDisplay;
 
-    constructor(readonly model: MidiService) {
+    constructor(readonly model: MidiService, private dialog: MatDialog) {
     }
 
     drop(event: CdkDragDrop<MidiTrack[]>) {
@@ -86,4 +88,17 @@ export class ControlsComponent {
 
         return false;
     }
+
+    openHelpDialog(): void {
+        this.dialog.open(HelpDialogContent, {width: '50%', panelClass: 'help-container'});
+    }
 }
+
+@Component({
+    selector: "help-dialog-content",
+    templateUrl: "./help-dialog-content.html",
+    styleUrl: './help-dialog-content.scss',
+    standalone: true,
+    imports: [MatDialogModule],
+  })
+  export class HelpDialogContent {}

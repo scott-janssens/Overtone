@@ -10,10 +10,10 @@ main {
 }
 
 .workspace {
-    flex: 0 1 80%;
+    flex: 0 0 80%;
     min-width: 0;
 }
 
 .control-panel {
-    flex: 1 1 auto;
+    flex: 0 0 20%;
 }

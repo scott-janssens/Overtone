@@ -28,6 +28,7 @@ export class LoadMidiFileComponent implements OnInit {
 
     private _display: string | undefined;
     get display(): string | undefined { return this._display; }
+    set display(value: string | undefined) { this._display = value; }
 
     @ViewChild(MatMenuTrigger) fileMenu!: MatMenuTrigger;
 
@@ -35,7 +36,7 @@ export class LoadMidiFileComponent implements OnInit {
     menuPosition = { x: '0px', y: '0px' };
 
     constructor(private _midiService: MidiService, private _http: HttpClient) {
-        _midiService.midiFileLoaded.subscribe(e => this.onLoaded());
+        _midiService.midiFileLoaded.subscribe(e => this.onLoaded(e));
     }
 
     ngOnInit(): void {
@@ -55,20 +56,28 @@ export class LoadMidiFileComponent implements OnInit {
 
         const fullFilename = filename + ".mid";
         let url = "./assets/" + fullFilename;
-        const headers = {
+        const options = {
             headers: new HttpHeaders({
-                'Accept': 'blob'
+                'Accept': '*/*'
             }),
-            'responseType': 'blob' as 'json'
+            responseType: 'blob' as 'json',
         };
 
-        let data: Observable<Blob> = this._http.get<Blob>(url, headers);
-        data.subscribe((response: Blob) => {
-            const file = new File([response], fullFilename);
-            this._midiService.loadMidiFile(file);
-        }, (error: HttpErrorResponse) => {
-            console.log(error.error.text);
-        });
+        console.log("Loading file from: " + url);
+        let data: Observable<Blob> = this._http.get<Blob>(url, options);
+        data.subscribe(
+            (response: Blob) => {
+                console.log(fullFilename + " blob retrieved.");
+                const file = new File([response], fullFilename);
+                this._midiService.loadMidiFile(file);
+                console.log(fullFilename + " loaded.");
+            },
+            (error: HttpErrorResponse) => {
+                this._midiService.abortLoad();
+                console.log("HttpClient.get() message: " + error.message);
+                console.log("HttpClient.get() error: " + JSON.stringify(error.error));
+            }
+        );
     }
 
     async onLoad(event: any) {
@@ -82,8 +91,8 @@ export class LoadMidiFileComponent implements OnInit {
         this._fileInput!.value = "";
     }
 
-    onLoaded() {
-        this._display = this._midiService.title || this._file?.name;
+    onLoaded(midiService: MidiService | null) {
+        this.display = midiService === null ? undefined : midiService.title || this._file?.name;
         this.isLoading = false;
     }
 }

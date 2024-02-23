@@ -64,16 +64,21 @@ export class CanvasComponent implements AfterViewInit {
         this._midiService.drawMonochromeChange.subscribe(e => this.redraw());
     }
 
-    public onFileLoaded(midiService: MidiService): void {
-        this.trackManagement();
-
-        this.zoom = 1;
-        this.canvas.height = this._trackDrawHeight * this._pitchCount + this._headerSize;
-        this.canvas.width = this.canvasRoot.nativeElement.clientWidth;
-        this.canvas.scrollLeft = this.canvas.scrollTop = 0;
-        this.canvas.setDimensions(midiService.totalBeats * this._quarterNoteWidth + this._headerSize, this._trackDrawHeight * this._pitchCount + this._headerSize);
-
-        this.redraw();
+    public onFileLoaded(midiService: MidiService | null): void {
+        if (midiService !== null) {
+            this.trackManagement();
+            this.zoom = 1;
+            this.canvas.height = this._trackDrawHeight * this._pitchCount + this._headerSize;
+            this.canvas.width = this.canvasRoot.nativeElement.clientWidth;
+            this.canvas.scrollLeft = this.canvas.scrollTop = 0;
+            this.canvas.setDimensions(midiService.totalBeats * this._quarterNoteWidth + this._headerSize, this._trackDrawHeight * this._pitchCount + this._headerSize);
+            this.redraw();
+        }
+        else {
+            this._canvasCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.canvas.setDimensions(0, 0);
+            this.canvas.height = 0;
+        }
     }
 
     private _trackSubscriptions: MidiTrack[] = [];

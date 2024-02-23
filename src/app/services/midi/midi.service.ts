@@ -12,7 +12,6 @@ import { ProgramChange } from "./ProgramChanges";
 })
 export class MidiService {
     private _midiMetadata: MidiMetaDataItem[] = [];
-    private _lastNoteOffEvent: MidiEvent | null = null;
     private _trackColors: string[] = [
         "#ffff00",
         "#ff00ff",
@@ -31,7 +30,7 @@ export class MidiService {
     private _midiFile: MidiFile | undefined;
     get midiFile(): MidiFile | undefined { return this._midiFile; }
     get isMidiLoaded(): boolean { return this.midiFile != undefined; }
-    midiFileLoaded: Subject<MidiService> = new Subject<MidiService>();
+    midiFileLoaded: Subject<MidiService | null> = new Subject<MidiService | null>();
 
     private _title: string = "";
     get title() { return this._title; }
@@ -113,10 +112,11 @@ export class MidiService {
     zoomLevelChange: Subject<[oldZoom: number, newZoom: number]> = new Subject<[number, number]>();
 
     private reset(): void {
+        this._midiFile = undefined;
         this._tracks = [];
         this._title = "";
         this._midiMetadata = [];
-        this._lastNoteOffEvent = null;
+        this._totalBeats = 0;
     }
 
     get barCount(): number { return this._midiMetadata.length; }
@@ -140,7 +140,7 @@ export class MidiService {
         return -1;
     }
 
-    loadMidiFile(file: File) {
+    loadMidiFile(file: File): void {
         this.reset();
         const reader = new FileReader();
         reader.onload = e => {
@@ -167,6 +167,11 @@ export class MidiService {
         };
 
         reader.readAsArrayBuffer(file);
+    }
+
+    abortLoad(): void {
+        this.reset();
+        this.midiFileLoaded.next(null);
     }
 
     private getMetaData(midi: MidiFile): void {

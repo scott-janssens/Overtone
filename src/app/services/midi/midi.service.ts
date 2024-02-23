@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
-import { AnyMetaEvent, KeySignatureEvent, MidiFile, NoteOffEvent, SetTempoEvent, TimeSignatureEvent, TrackNameEvent, read } from "midifile-ts";
-import { MidiEvent, MidiTrack } from "./MidiTrack";
-import { Subject, last } from "rxjs";
+import { AnyMetaEvent, MidiFile, read } from "midifile-ts";
+import { MidiTrack } from "./MidiTrack";
+import { Subject } from "rxjs";
 import { ProgramChange } from "./ProgramChanges";
 
 // https://github.com/ryohey/midifile-ts
@@ -129,7 +129,7 @@ export class MidiService {
         let beats = 0;
 
         for (let i = 0; i + 1 < this._midiMetadata.length; i++) {
-            let meta = this._midiMetadata[i];
+            const meta = this._midiMetadata[i];
             const beatUnit = meta.timeSigDenominator / 4;
             beats += meta.timeSigNumerator / beatUnit;
             if (beats > beatNum) {
@@ -151,7 +151,7 @@ export class MidiService {
 
                 if (this._midiFile.header.trackCount > 0) {
                     for (let i = 1; i < this._midiFile.tracks.length; i++) {
-                        let track = new MidiTrack(this._midiFile.tracks[i]);
+                        const track = new MidiTrack(this._midiFile.tracks[i]);
                         track.color = this._trackColors[i % this._trackColors.length];
                         this._tracks.push(track);
                     }
@@ -181,7 +181,7 @@ export class MidiService {
         let barTime = 0;
         let globalBeat = 0;
 
-        for (let event of midi.tracks[0]) {
+        for (const event of midi.tracks[0]) {
             if (event.type === "meta") {
                 if (event.subtype === "trackName") {
                     this._title = event.text;
@@ -219,9 +219,9 @@ export class MidiService {
         }
 
         let lastGlobal = 0;
-        for (let track of this._tracks) {
+        for (const track of this._tracks) {
             for (let i = track.events.length - 1; i >= 0; i--) {
-                let midiEvent = track.events[i];
+                const midiEvent = track.events[i];
                 if ((midiEvent.event.type === "meta" &&
                         midiEvent.event.subtype === "endOfTrack") ||
                     (midiEvent.event.type === "channel" &&
@@ -281,16 +281,16 @@ export class MidiService {
     }
 
     mergeTrackInstruments(): void {
-        let programmed = this.tracks.filter(x => x.program?.instrument !== "");
+        const programmed = this.tracks.filter(x => x.program?.instrument !== "");
         this.mergeByKey(programmed, t => t.program!.instrument);
         this.tracksChange.next(this);
     }
 
     mergeTrackTypes(): void {
-        let programmed = this.tracks.filter(x => x.program != null);
+        const programmed = this.tracks.filter(x => x.program != null);
         this.mergeByKey(programmed, t => t.program!.type);
         let c = 0;
-        this.tracks.forEach((track: MidiTrack, index: number) => {
+        this.tracks.forEach((track: MidiTrack) => {
             if (track.program != null) {
                 track.name = track.program.type;
                 track.program = new ProgramChange(-1, "", track.program.type);
@@ -301,8 +301,8 @@ export class MidiService {
     }
 
     mergeAll(): void {
-        this.mergeByKey(this.tracks, t => "merge");
-        let track = this.tracks[0];
+        this.mergeByKey(this.tracks, (t: MidiTrack) => "merge");
+        const track = this.tracks[0];
 
         if (track?.program != null) {
             track.name = "Merged";
@@ -317,7 +317,7 @@ export class MidiService {
 
         map.forEach((value: MidiTrack[], key: string) => {
             if (value.length > 1) {
-                let merged = this.mergeTrackArray(value);
+                const merged = this.mergeTrackArray(value);
                 merged!.name = key;
             }
         });
@@ -369,7 +369,7 @@ class MidiMetaDataItem {
     }
 
     applyEvent(event: AnyMetaEvent): void {
-        let meta = event as AnyMetaEvent;
+        const meta = event as AnyMetaEvent;
         switch (meta.subtype) {
             case "keySignature":
                 this.keySignature = new KeySignature(meta.key, meta.scale);

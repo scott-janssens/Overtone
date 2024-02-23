@@ -55,7 +55,7 @@ export class LoadMidiFileComponent implements OnInit {
         this.isLoading = true;
 
         const fullFilename = filename + ".mid";
-        let url = "./assets/" + fullFilename;
+        const url = "./assets/" + fullFilename;
         const options = {
             headers: new HttpHeaders({
                 'Accept': '*/*'
@@ -64,7 +64,7 @@ export class LoadMidiFileComponent implements OnInit {
         };
 
         console.log("Loading file from: " + url);
-        let data: Observable<Blob> = this._http.get<Blob>(url, options);
+        const data: Observable<Blob> = this._http.get<Blob>(url, options);
         data.subscribe(
             (response: Blob) => {
                 console.log(fullFilename + " blob retrieved.");
@@ -80,9 +80,10 @@ export class LoadMidiFileComponent implements OnInit {
         );
     }
 
-    async onLoad(event: any) {
+    async onLoad(event: Event) {
         this.isLoading = true;
-        this._file = event.target.files[0];
+        const element = event.target as HTMLInputElement;
+        this._file = element?.files![0];
 
         if (this._file) {
             this._midiService.loadMidiFile(this._file);

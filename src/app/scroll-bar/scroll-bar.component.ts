@@ -1,8 +1,8 @@
 import { NgIf } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, Input, Renderer2, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular/core';
 
 @Component({
-  selector: 'scroll-bar',
+  selector: 'ot-scroll-bar',
   standalone: true,
   imports: [NgIf],
   templateUrl: './scroll-bar.component.html',

@@ -22,8 +22,8 @@ export class Overtone {
     constructor(frequency: number) {
         this._frequency = frequency;
 
-        let r = 12 * Math.log2(frequency / 16.3516);
-        let h = Math.round(r);
+        const r = 12 * Math.log2(frequency / 16.3516);
+        const h = Math.round(r);
 
         this._cents = Math.round(100 * (r - h));
         this._closestPitch = new Pitch(Overtone._names[h % 12]+ Math.floor(h / 12));

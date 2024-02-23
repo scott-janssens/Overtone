@@ -46,7 +46,7 @@ export class ControlsComponent {
     }
 
     onMenuSelect(select: boolean) {
-        for (let track of this.model.tracks) {
+        for (const track of this.model.tracks) {
             track.isTrackVisible = select;
         }
     }
@@ -69,7 +69,7 @@ export class ControlsComponent {
 
     anyTrackInstruments(): boolean {
         const map = this.model.getTrackMap(this.model.tracks.filter(x => x.program?.instrument ?? "" != ""), x => x.program!.instrument);
-        for (let value of map.values()) {
+        for (const value of map.values()) {
             if (value.length > 1) {
                 return true;
             }
@@ -80,7 +80,7 @@ export class ControlsComponent {
 
     anyTrackTypes(): boolean {
         const map = this.model.getTrackMap(this.model.tracks.filter(x => x.program?.type ?? "" != ""), x => x.program!.type);
-        for (let value of map.values()) {
+        for (const value of map.values()) {
             if (value.length > 1) {
                 return true;
             }
@@ -90,15 +90,15 @@ export class ControlsComponent {
     }
 
     openHelpDialog(): void {
-        this.dialog.open(HelpDialogContent, {width: '50%', panelClass: 'help-container'});
+        this.dialog.open(HelpDialogContentComponent, {width: '50%', panelClass: 'help-container'});
     }
 }
 
 @Component({
-    selector: "help-dialog-content",
+    selector: "ot-help-dialog-content",
     templateUrl: "./help-dialog-content.html",
     styleUrl: './help-dialog-content.scss',
     standalone: true,
     imports: [MatDialogModule],
   })
-  export class HelpDialogContent {}
+  export class HelpDialogContentComponent {}

@@ -1,4 +1,4 @@
-import { AnyEvent, ChannelEvent, MetaEvent, ProgramChangeEvent, TrackNameEvent } from "midifile-ts";
+import { AnyEvent, ProgramChangeEvent, TrackNameEvent } from "midifile-ts";
 import { Subject } from "rxjs";
 import { ProgramChange, ProgramChanges } from "./ProgramChanges";
 
@@ -48,12 +48,12 @@ export class MidiTrack {
                 this.events.push(new MidiEvent(x, time));
             });
 
-            for (let event of events) {
+            for (const event of events) {
                 if (event.type == "meta") {
                     this.name = (event as TrackNameEvent)!.text;
                 }
                 else if (event.type === "channel" && event.subtype === "programChange") {
-                    let programChange = (event as ProgramChangeEvent).value;
+                    const programChange = (event as ProgramChangeEvent).value;
                     this.program = ProgramChanges.get(programChange);
                 }
 
@@ -78,7 +78,7 @@ export class MidiTrack {
         while (thisIdx < this.events.length || trackIdx < track.events.length) {
             if (trackIdx >= track.events.length ||
                 this.events[thisIdx]?.globalTime <= track.events[trackIdx].globalTime) {
-                let newEvent = structuredClone(this.events[thisIdx]);
+                const newEvent = structuredClone(this.events[thisIdx]);
                 newEvent.event.deltaTime = this.events[thisIdx].globalTime - mergeTime;
                 newTrack.events.push(newEvent);
                 mergeTime = this.events[thisIdx].globalTime;
@@ -86,7 +86,7 @@ export class MidiTrack {
             }
             else {
                 if (track.events[trackIdx].event.type != "meta") {
-                    let newEvent = structuredClone(track.events[trackIdx]);
+                    const newEvent = structuredClone(track.events[trackIdx]);
                     newEvent.event.deltaTime = track.events[trackIdx].globalTime - mergeTime;
                     newTrack.events.push(newEvent);
                     mergeTime = track.events[trackIdx].globalTime;

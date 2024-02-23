@@ -18,7 +18,7 @@
                 <button mat-menu-item (click)="onMenuSelect(true)">Select All</button>
                 <button mat-menu-item (click)="onMenuSelect(false)">Select None</button>
                 <mat-divider></mat-divider>
-                <button mat-menu-item *ngIf="model.tracks[0] != track" (click)="onMenuMergeUp(track)">Merge into Track
+                <button mat-menu-item *ngIf="model.tracks[0] !== track" (click)="onMenuMergeUp(track)">Merge into Track
                     Above</button>
                 <button mat-menu-item *ngIf="anyTrackInstrument(track)"
                     (click)="model.mergeTrackInstrument(track.program.instrument)">Merge

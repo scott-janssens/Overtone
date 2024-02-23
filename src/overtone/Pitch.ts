@@ -47,7 +47,7 @@ export class Pitch {
             step--;
         }
 
-        let octave = +scientific[pos];
+        const octave = +scientific[pos];
 
         if (octave < 0) {
             throw new Error("Octave must be 0 or greater.");
@@ -76,7 +76,7 @@ export class Pitch {
             throw new Error("MIDI value out of range for Pitch (24-127).");
         }
 
-        let scientific = this._namesSharp[midi % 12] + (Math.floor(midi / 12) - 1);
+        const scientific = this._namesSharp[midi % 12] + (Math.floor(midi / 12) - 1);
         return new Pitch(scientific);
     }
 }

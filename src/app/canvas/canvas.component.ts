@@ -84,12 +84,12 @@ export class CanvasComponent implements AfterViewInit {
     private _trackSubscriptions: MidiTrack[] = [];
 
     private trackManagement() {
-        let newSubs: MidiTrack[] = [];
+        const newSubs: MidiTrack[] = [];
 
         for (let i = 0; i < this._midiService.tracks.length; i++) {
-            let track = this._midiService.tracks[i];
+            const track = this._midiService.tracks[i];
             newSubs.push(track);
-            let subIdx = this._trackSubscriptions.indexOf(track);
+            const subIdx = this._trackSubscriptions.indexOf(track);
 
             if (subIdx === -1) {
                 track.trackVisibilityChange.subscribe(e => this.redraw());
@@ -100,7 +100,7 @@ export class CanvasComponent implements AfterViewInit {
             }
         }
 
-        for (let track of this._trackSubscriptions) {
+        for (const track of this._trackSubscriptions) {
             track.trackVisibilityChange.unsubscribe();
             track.colorChange.unsubscribe();
         }
@@ -142,7 +142,7 @@ export class CanvasComponent implements AfterViewInit {
 
     private drawMidiTrack(track: MidiTrack): void {
         if (track.isTrackVisible) {
-            let notes: { [Key: number]: Note | null } = {};
+            const notes: { [Key: number]: Note | null } = {};
 
             this._canvasCtx.fillStyle = this._midiService.drawMonochrome ? "gray" : track.color;
             this._canvasCtx.strokeStyle = this._canvasCtx.fillStyle;
@@ -155,7 +155,7 @@ export class CanvasComponent implements AfterViewInit {
             const yOffset = -this.canvas.scrollTop + this._headerSize;
             const trackZoomNarrow = this._trackDrawHeightZoomed - 2;
 
-            for (let event of track.iterateFrom(startTime)) {
+            for (const event of track.iterateFrom(startTime)) {
                 if (event.event.type == "channel") {
                     if (event.globalTime > endTime && notes[0] == null) {
                         break;
@@ -167,11 +167,11 @@ export class CanvasComponent implements AfterViewInit {
                                 notes[event.event.noteNumber] = new Note(event.globalTime - startTime, event.event.noteNumber, event.event.velocity);
                             }
                             break;
-                        case "noteOff":
-                            let note = notes[event.event.noteNumber];
+                        case "noteOff": {
+                            const note = notes[event.event.noteNumber];
                             if (note != null) {
                                 const x = this._headerSize + beatPos * note.start;
-                                let width = (event.globalTime - note.start - startTime) * beatPos;
+                                const width = (event.globalTime - note.start - startTime) * beatPos;
 
                                 if (this._midiService.noteDisplay !== NoteDisplay.Hidden) {
                                     const y = (119 - note.noteNumber) * this._trackDrawHeightZoomed + yOffset;
@@ -188,6 +188,7 @@ export class CanvasComponent implements AfterViewInit {
                                 this._overtones.push(new OvertoneItem(event.event.noteNumber, x, width, track.color));
                             }
                             break;
+                        }
                         case "controller":
                             break;
                     }
@@ -202,7 +203,7 @@ export class CanvasComponent implements AfterViewInit {
         const lastLineWidth = this._canvasCtx.lineWidth;
         this._canvasCtx.lineWidth = 1;
 
-        for (let item of this._overtones) {
+        for (const item of this._overtones) {
             item.color = this._midiService.drawMonochrome ? "gray" : item.color;
 
             const sequence = new OvertoneSequence(Pitch.fromMidi(item.midiNote).frequency, 8372);
@@ -223,7 +224,7 @@ export class CanvasComponent implements AfterViewInit {
             const yOffset = this._trackDrawHeightZoomed / 2 - this.canvas.scrollTop + this._headerSize;
 
             for (let i = 1; i < Math.min(15, sequence.length); i++) {
-                let overtone = sequence[i];
+                const overtone = sequence[i];
                 this._canvasCtx.lineWidth *= 0.8;
 
                 if (this._midiService.overtoneDisplay == OvertoneDisplay.CentsOffset) {
@@ -233,7 +234,7 @@ export class CanvasComponent implements AfterViewInit {
                     this._canvasCtx.strokeStyle = drawColor!;
                 }
 
-                let y = this._trackDrawHeightZoomed * (119 - overtone.closestPitch.midi - overtone.cents / 100) + yOffset;
+                const y = this._trackDrawHeightZoomed * (119 - overtone.closestPitch.midi - overtone.cents / 100) + yOffset;
 
                 if (y <= this._headerSize) {
                     break;
@@ -328,7 +329,7 @@ export class CanvasComponent implements AfterViewInit {
         this._canvasCtx.fillStyle = "gray";
         this._canvasCtx.fillRect(this._headerSize + 1, 0, this.canvas.width, this._headerSize);
 
-        this._canvasCtx.strokeStyle = this._blackKey;;
+        this._canvasCtx.strokeStyle = this._blackKey;
         this._canvasCtx.lineWidth = 1;
         this._canvasCtx.font = font + "px Arial sans-serif";
         this._canvasCtx.fillStyle = this._blackKey;
@@ -366,7 +367,7 @@ export class CanvasComponent implements AfterViewInit {
 
         for (let i = 1; i < 10; i++) {
             this._canvasCtx.beginPath();
-            let ly = bottom - i * this._octaveHeight - this.canvas.scrollTop;
+            const ly = bottom - i * this._octaveHeight - this.canvas.scrollTop;
             this._canvasCtx.moveTo(0, ly);
             this._canvasCtx.lineTo(this._headerSize, ly);
             this._canvasCtx.stroke();

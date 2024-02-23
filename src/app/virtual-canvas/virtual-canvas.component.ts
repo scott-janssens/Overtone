@@ -4,7 +4,7 @@ import { NgClass } from '@angular/common';
 import { Subject } from 'rxjs';
 
 @Component({
-  selector: 'virtual-canvas',
+  selector: 'ot-virtual-canvas',
   standalone: true,
   imports: [ScrollBarComponent, NgClass],
   templateUrl: './virtual-canvas.component.html',
@@ -104,7 +104,7 @@ export class VirtualCanvasComponent implements AfterViewInit {
   }
 
   private setGridClass(): void {
-    let visible = (this.hScroll.isVisible ? 2 : 0) + (this.vScroll.isVisible ? 1 : 0);
+    const visible = (this.hScroll.isVisible ? 2 : 0) + (this.vScroll.isVisible ? 1 : 0);
 
     switch (visible) {
       case 0:

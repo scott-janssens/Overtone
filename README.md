@@ -1,27 +1,15 @@
 # Overtone
+This application plots overtones for acoustic instruments. Overtone is still a beta version.
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.1.1.
+Since scale pitch frequencies are exponential while the overtone sequence is arithmetic, the overtones in the sequence will not remain in tune with the fundamental pitch played by the instrument. This application shows the amount the overtones are out of tune in cents (1/100th of a semitone).
 
-## Development server
+MIDI files can be uploaded, or a provided file can be loaded for analysis. Instrument track visibility can be toggled, or instruments can be merged to organize the music as desired (via right click context menu). The notes of instruments at the top of the list will be draw over the notes of instruments lower in the list. Rearranging the order of instruments will alter the order the instrument notes are drawn.
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+Currently, the overtones displayed are for illustrative purposes. Every instrument’s overtone sequence diminishes in amplitude in a linear fashion. A future version will correct this so overtone sequences match the individual instrument type.
 
-## Code scaffolding
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
-
-## Build
-
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+## TODO
+- Frequency range control
+- Instrument based overtones
+- Handle MIDI percussion correctly
+- Overtones/harmonic analysis comparison

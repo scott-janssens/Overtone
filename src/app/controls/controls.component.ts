@@ -40,7 +40,6 @@ export class ControlsComponent {
         this.contextMenuPosition.x = event.clientX + 'px';
         this.contextMenuPosition.y = event.clientY + 'px';
         this.contextMenu.menuData = { track: track };
-        this.contextMenu.menu?.focusFirstItem
         this.contextMenu.openMenu();
     }
 

@@ -143,8 +143,6 @@ export class CanvasComponent implements AfterViewInit {
 
     private drawMidiTrack(track: MidiTrack): void {
         if (track.isTrackVisible) {
-            //const notes: { [Key: number]: Note | null } = {};
-
             this._canvasCtx.fillStyle = this._midiService.drawMonochrome ? "gray" : track.color;
             this._canvasCtx.strokeStyle = this._canvasCtx.fillStyle;
             const lastLineWidth = this._canvasCtx.lineWidth;
@@ -156,16 +154,16 @@ export class CanvasComponent implements AfterViewInit {
             const yOffset = -this.canvas.scrollTop + this._headerSize;
             const trackZoomNarrow = this._trackDrawHeightZoomed - 2;
 
-            for (const noteEvent of track.notesFrom(startTime)) {
-                if (noteEvent == null || noteEvent.start > endTime) {
+            for (const note of track.notesFrom(startTime)) {
+                if (note == null || note.start > endTime) {
                     break;
                 }
 
-                const x = this._headerSize + (noteEvent.start - startTime) * beatPos;
-                const width = noteEvent.width! * beatPos;
+                const x = this._headerSize + (note.start - startTime) * beatPos;
+                const width = note.width! * beatPos;
 
                 if (this._midiService.noteDisplay !== NoteDisplay.Hidden) {
-                    const y = (119 - noteEvent.noteNumber) * this._trackDrawHeightZoomed + yOffset;
+                    const y = (119 - note.noteNumber) * this._trackDrawHeightZoomed + yOffset;
 
                     if (this._midiService.noteDisplay === NoteDisplay.Filled) {
                         this._canvasCtx.fillRect(x, y, width, trackZoomNarrow);
@@ -175,48 +173,8 @@ export class CanvasComponent implements AfterViewInit {
                     }
                 }
 
-                this._overtones.push(new OvertoneItem(noteEvent.noteNumber, x, width, track.color));
+                this._overtones.push(new OvertoneItem(note.noteNumber, x, width, track.color));
             }
-
-            // for (const event of track.iterateFrom(startTime)) {
-            //     if (event.event.type == "channel") {
-            //         if (event.globalTime > endTime && notes[0] == null) {
-            //             break;
-            //         }
-
-            //         switch (event.event.subtype) {
-            //             case "noteOn":
-            //                 if (notes[event.event.noteNumber] == null) {
-            //                     notes[event.event.noteNumber] = new Note(event.globalTime - startTime, event.event.noteNumber, event.event.velocity);
-            //                 }
-            //                 break;
-            //             case "noteOff": {
-            //                 const note = notes[event.event.noteNumber];
-            //                 if (note != null) {
-            //                     const x = this._headerSize + beatPos * note.start;
-            //                     const width = (event.globalTime - note.start - startTime) * beatPos;
-
-            //                     if (this._midiService.noteDisplay !== NoteDisplay.Hidden) {
-            //                         const y = (119 - note.noteNumber) * this._trackDrawHeightZoomed + yOffset;
-
-            //                         if (this._midiService.noteDisplay === NoteDisplay.Filled) {
-            //                             this._canvasCtx.fillRect(x, y, width, trackZoomNarrow);
-            //                         }
-            //                         else {
-            //                             this._canvasCtx.strokeRect(x, y, width, trackZoomNarrow);
-            //                         }
-            //                     }
-
-            //                     notes[event.event.noteNumber] = null;
-            //                     this._overtones.push(new OvertoneItem(event.event.noteNumber, x, width, track.color));
-            //                 }
-            //                 break;
-            //             }
-            //             case "controller":
-            //                 break;
-            //         }
-            //     }
-            // }
 
             this._canvasCtx.lineWidth = lastLineWidth;
         }

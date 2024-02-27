@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Injectable } from "@angular/core";
 import { AnyMetaEvent, MidiFile, read } from "midifile-ts";
 import { MidiTrack } from "./MidiTrack";

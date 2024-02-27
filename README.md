@@ -12,4 +12,5 @@ Currently, the overtones displayed are for illustrative purposes. Every instrume
 - Frequency range control
 - Instrument based overtones
 - Handle MIDI percussion correctly
+- Reflect velocity and CC values in overtones
 - Overtones/harmonic analysis comparison

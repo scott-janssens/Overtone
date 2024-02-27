@@ -1,9 +1,10 @@
+/* eslint-disable */
 import { AfterViewInit, Component, ElementRef, HostListener, ViewChild } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { OvertoneSequence } from "../../overtone/OvertoneSequence";
 import { Pitch } from "../../overtone/Pitch";
 import { MidiService, NoteDisplay, OvertoneDisplay } from "../services/midi/midi.service";
-import { MidiTrack } from "../services/midi/MidiTrack";
+import { MidiEvent, MidiTrack } from "../services/midi/MidiTrack";
 import { VirtualCanvasComponent } from "../virtual-canvas/virtual-canvas.component";
 
 @Component({
@@ -142,7 +143,7 @@ export class CanvasComponent implements AfterViewInit {
 
     private drawMidiTrack(track: MidiTrack): void {
         if (track.isTrackVisible) {
-            const notes: { [Key: number]: Note | null } = {};
+            //const notes: { [Key: number]: Note | null } = {};
 
             this._canvasCtx.fillStyle = this._midiService.drawMonochrome ? "gray" : track.color;
             this._canvasCtx.strokeStyle = this._canvasCtx.fillStyle;
@@ -155,45 +156,67 @@ export class CanvasComponent implements AfterViewInit {
             const yOffset = -this.canvas.scrollTop + this._headerSize;
             const trackZoomNarrow = this._trackDrawHeightZoomed - 2;
 
-            for (const event of track.iterateFrom(startTime)) {
-                if (event.event.type == "channel") {
-                    if (event.globalTime > endTime && notes[0] == null) {
-                        break;
+            for (const noteEvent of track.notesFrom(startTime)) {
+                if (noteEvent == null || noteEvent.start > endTime) {
+                    break;
+                }
+
+                const x = this._headerSize + (noteEvent.start - startTime) * beatPos;
+                const width = noteEvent.width! * beatPos;
+
+                if (this._midiService.noteDisplay !== NoteDisplay.Hidden) {
+                    const y = (119 - noteEvent.noteNumber) * this._trackDrawHeightZoomed + yOffset;
+
+                    if (this._midiService.noteDisplay === NoteDisplay.Filled) {
+                        this._canvasCtx.fillRect(x, y, width, trackZoomNarrow);
                     }
-
-                    switch (event.event.subtype) {
-                        case "noteOn":
-                            if (notes[event.event.noteNumber] == null) {
-                                notes[event.event.noteNumber] = new Note(event.globalTime - startTime, event.event.noteNumber, event.event.velocity);
-                            }
-                            break;
-                        case "noteOff": {
-                            const note = notes[event.event.noteNumber];
-                            if (note != null) {
-                                const x = this._headerSize + beatPos * note.start;
-                                const width = (event.globalTime - note.start - startTime) * beatPos;
-
-                                if (this._midiService.noteDisplay !== NoteDisplay.Hidden) {
-                                    const y = (119 - note.noteNumber) * this._trackDrawHeightZoomed + yOffset;
-
-                                    if (this._midiService.noteDisplay === NoteDisplay.Filled) {
-                                        this._canvasCtx.fillRect(x, y, width, trackZoomNarrow);
-                                    }
-                                    else {
-                                        this._canvasCtx.strokeRect(x, y, width, trackZoomNarrow);
-                                    }
-                                }
-
-                                notes[event.event.noteNumber] = null;
-                                this._overtones.push(new OvertoneItem(event.event.noteNumber, x, width, track.color));
-                            }
-                            break;
-                        }
-                        case "controller":
-                            break;
+                    else {
+                        this._canvasCtx.strokeRect(x, y, width, trackZoomNarrow);
                     }
                 }
+
+                this._overtones.push(new OvertoneItem(noteEvent.noteNumber, x, width, track.color));
             }
+
+            // for (const event of track.iterateFrom(startTime)) {
+            //     if (event.event.type == "channel") {
+            //         if (event.globalTime > endTime && notes[0] == null) {
+            //             break;
+            //         }
+
+            //         switch (event.event.subtype) {
+            //             case "noteOn":
+            //                 if (notes[event.event.noteNumber] == null) {
+            //                     notes[event.event.noteNumber] = new Note(event.globalTime - startTime, event.event.noteNumber, event.event.velocity);
+            //                 }
+            //                 break;
+            //             case "noteOff": {
+            //                 const note = notes[event.event.noteNumber];
+            //                 if (note != null) {
+            //                     const x = this._headerSize + beatPos * note.start;
+            //                     const width = (event.globalTime - note.start - startTime) * beatPos;
+
+            //                     if (this._midiService.noteDisplay !== NoteDisplay.Hidden) {
+            //                         const y = (119 - note.noteNumber) * this._trackDrawHeightZoomed + yOffset;
+
+            //                         if (this._midiService.noteDisplay === NoteDisplay.Filled) {
+            //                             this._canvasCtx.fillRect(x, y, width, trackZoomNarrow);
+            //                         }
+            //                         else {
+            //                             this._canvasCtx.strokeRect(x, y, width, trackZoomNarrow);
+            //                         }
+            //                     }
+
+            //                     notes[event.event.noteNumber] = null;
+            //                     this._overtones.push(new OvertoneItem(event.event.noteNumber, x, width, track.color));
+            //                 }
+            //                 break;
+            //             }
+            //             case "controller":
+            //                 break;
+            //         }
+            //     }
+            // }
 
             this._canvasCtx.lineWidth = lastLineWidth;
         }
@@ -391,17 +414,17 @@ export class CanvasComponent implements AfterViewInit {
     }
 }
 
-class Note {
-    public start: number;
-    public noteNumber: number;
-    public velocity: number;
+// class Note {
+//     public start: number;
+//     public noteNumber: number;
+//     public velocity: number;
 
-    constructor(start: number, noteNumber: number, velocity: number) {
-        this.start = start;
-        this.velocity = velocity;
-        this.noteNumber = noteNumber;
-    }
-}
+//     constructor(start: number, noteNumber: number, velocity: number) {
+//         this.start = start;
+//         this.velocity = velocity;
+//         this.noteNumber = noteNumber;
+//     }
+// }
 
 class OvertoneItem {
     midiNote: number;

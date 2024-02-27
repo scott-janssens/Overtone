@@ -8,6 +8,9 @@ export class MidiTrack {
     private _events: MidiEvent[] = [];
     get events(): MidiEvent[] { return this._events; }
 
+    private _notes: NoteEvent[] = []
+    get notes(): NoteEvent[] { return this._notes; }
+
     private _program: ProgramChange | undefined;
     public get program(): ProgramChange | undefined { return this._program; }
     public set program(value: ProgramChange | undefined) {
@@ -40,6 +43,7 @@ export class MidiTrack {
     trackVisibilityChange: Subject<MidiTrack> = new Subject<MidiTrack>();
 
     constructor(events: AnyEvent[] | null = null) {
+        const notes: { [Key: number]: NoteEvent | null } = {};
         let time = 0;
 
         if (events !== null) {
@@ -48,17 +52,32 @@ export class MidiTrack {
                 this.events.push(new MidiEvent(x, time));
             });
 
-            for (const event of events) {
-                if (event.type == "meta") {
-                    this.name = (event as TrackNameEvent)!.text;
+            for (const event of this.events) {
+                if (event.event.type == "meta") {
+                    this.name = (event.event as TrackNameEvent)!.text;
                 }
-                else if (event.type === "channel" && event.subtype === "programChange") {
-                    const programChange = (event as ProgramChangeEvent).value;
-                    this.program = ProgramChanges.get(programChange);
-                }
-
-                if (this.name !== "" && this.program !== undefined) {
-                    break;
+                else if (event.event.type === "channel") {
+                    switch (event.event.subtype) {
+                        case "noteOn": {
+                            const noteEvent = new NoteEvent(event.globalTime, event.event.noteNumber, event.event.velocity);
+                            if (notes[event.event.noteNumber] == null) {
+                                notes[event.event.noteNumber] = noteEvent;
+                            }
+                            break;
+                        }
+                        case "noteOff":
+                            if (notes[event.event.noteNumber] != null) {
+                                notes[event.event.noteNumber]!.end = event.globalTime;
+                                this._notes.push(notes[event.event.noteNumber]!);
+                                notes[event.event.noteNumber] = null;
+                            }
+                            break;
+                        case "programChange": {
+                            const programChange = (event.event as ProgramChangeEvent).value;
+                            this.program = ProgramChanges.get(programChange);
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -101,25 +120,28 @@ export class MidiTrack {
         return newTrack;
     }
 
-    *iterateFrom(globalTime: number): Generator<MidiEvent> {
-        let i = this.globalTimeBinarySearch(globalTime);
-        for (; i < this._events.length; i++) {
-            yield this._events[i];
+    *notesFrom(globalTime: number): Generator<NoteEvent> {
+        for (let i = this.noteTimeBinarySearch(globalTime); i < this._notes.length; i++) {
+            yield this._notes[i];
         }
     }
 
-    private globalTimeBinarySearch(globalTime: number): number {
+    private noteTimeBinarySearch(globalTime: number): number {
+        if (this._notes.length === 0) {
+            return -1;
+        }
+
         let left = 0;
-        let right = this._events.length;
+        let right = this._notes.length;
         let length = right - left;
         let i = Math.floor(length / 2);
 
         while (left < right) {
-            if (this._events[i].globalTime === globalTime) {
+            if (this._notes[i].end === globalTime) {
                 break;
             }
 
-            if (globalTime < this._events[i].globalTime) {
+            if (globalTime < this._notes[i].end!) {
                 if (right === i) {
                     break;
                 }
@@ -137,7 +159,7 @@ export class MidiTrack {
             i = left + Math.floor(length / 2);
         }
 
-        while (i > 0 && this._events[i].globalTime >= globalTime) {
+        while (i > 0 && this._notes[i].end! >= globalTime) {
             i--;
         }
 
@@ -152,5 +174,30 @@ export class MidiEvent {
     constructor(event: AnyEvent, globalTime: number) {
         this.event = event;
         this.globalTime = globalTime;
+    }
+}
+
+export class NoteEvent {
+    private static _lastId: number = 0;
+    public readonly id: number = 0;
+    public readonly start: number;
+    public readonly noteNumber: number;
+    public readonly velocity: number;
+
+    private _end: number | null = null;
+    public get end(): number | null { return this._end; }
+    public set end(value: number) {
+        this._end = value;
+        this._width = value - this.start;
+    }
+
+    private _width: number | null = null;
+    public get width(): number | null { return this._width; }
+
+    constructor(start: number, noteNumber: number, velocity: number) {
+        this.id = ++NoteEvent._lastId;
+        this.start = start;
+        this.velocity = velocity;
+        this.noteNumber = noteNumber;
     }
 }

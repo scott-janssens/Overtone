@@ -52,7 +52,7 @@
             <div class="slider-container" *ngIf="model.overtoneDisplay === OvertoneDisplayEnum.CentsOffset">
                 <label class="slider-label" for="cents-slider">Overtones</label>
                 <div class="slider">
-                    <mat-slider min="0" max="50" [(ngModel)]="model.centsThreshold" ngDefaultControl>
+                    <mat-slider min="1" max="50" [(ngModel)]="model.centsThreshold" ngDefaultControl>
                         <input name="cents-slider" matSliderThumb [value]="model.centsThreshold">
                     </mat-slider>
                 </div>

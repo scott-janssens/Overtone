@@ -1,4 +1,4 @@
-import { AnyEvent, ProgramChangeEvent, TrackNameEvent } from "midifile-ts";
+import { AnyEvent, ProgramChangeEvent } from "midifile-ts";
 import { Subject } from "rxjs";
 import { ProgramChange, ProgramChanges } from "./ProgramChanges";
 
@@ -11,9 +11,12 @@ export class MidiTrack {
     private _notes: Note[] = []
     get notes(): Note[] { return this._notes; }
 
+    private _endOfTrack: number = -1;
+    get endOfTrack(): number { return this._endOfTrack; }
+
     private _program: ProgramChange | undefined;
-    public get program(): ProgramChange | undefined { return this._program; }
-    public set program(value: ProgramChange | undefined) {
+    get program(): ProgramChange | undefined { return this._program; }
+    set program(value: ProgramChange | undefined) {
         if (this._program != value) {
             this._program = value;
             this.programChange.next(value);
@@ -22,8 +25,8 @@ export class MidiTrack {
     programChange: Subject<ProgramChange | undefined> = new Subject<ProgramChange | undefined>();
 
     private _color: string = "white";
-    public get color(): string { return this._color; }
-    public set color(value: string) {
+    get color(): string { return this._color; }
+    set color(value: string) {
         const newColor = value;
         if (this._color != newColor) {
             this._color = newColor;
@@ -47,38 +50,53 @@ export class MidiTrack {
         let time = 0;
 
         if (events !== null) {
-            events.forEach(x => {
-                time += x.deltaTime;
-                this._events.push(new MidiEvent(x, time));
-            });
+            events.forEach(event => {
+                let eventIsNote: boolean = false;
+                time += event.deltaTime;
 
-            for (const event of this._events) {
-                if (event.event.type == "meta" && event.event.subtype === "trackName") {
-                    this.name = (event.event as TrackNameEvent)!.text;
+                if (event.type === "meta") {
+                    switch (event.subtype) {
+                        case "trackName":
+                            this.name = event.text;
+                            break;
+                        case "endOfTrack":
+                            this._endOfTrack = time;
+                            break;
+                    }
                 }
-                else if (event.event.type === "channel") {
-                    switch (event.event.subtype) {
+                else if (event.type === "channel") {
+                    switch (event.subtype) {
                         case "noteOn": {
-                            const noteEvent = new Note(event.globalTime, event.event.noteNumber, event.event.velocity);
-                            if (notes[event.event.noteNumber] == null) {
-                                notes[event.event.noteNumber] = noteEvent;
+                            eventIsNote = true;
+                            const noteEvent = new Note(time, event.noteNumber, event.velocity);
+                            if (notes[event.noteNumber] == null) {
+                                notes[event.noteNumber] = noteEvent;
                             }
                             break;
                         }
                         case "noteOff":
-                            if (notes[event.event.noteNumber] != null) {
-                                notes[event.event.noteNumber]!.end = event.globalTime;
-                                this._notes.push(notes[event.event.noteNumber]!);
-                                notes[event.event.noteNumber] = null;
+                            eventIsNote = true;
+                            if (notes[event.noteNumber] != null) {
+                                notes[event.noteNumber]!.end = time;
+                                this._notes.push(notes[event.noteNumber]!);
+                                notes[event.noteNumber] = null;
                             }
                             break;
                         case "programChange": {
-                            const programChange = (event.event as ProgramChangeEvent).value;
+                            const programChange = (event as ProgramChangeEvent).value;
                             this.program = ProgramChanges.get(programChange);
                             break;
                         }
                     }
                 }
+
+                if (!eventIsNote) {
+                    this._events.push(new MidiEvent(event, time));
+                }
+            });
+
+            if (this._endOfTrack < 0) {
+                this._endOfTrack = this._notes[this._notes.length - 1].end!;
             }
         }
     }
@@ -97,17 +115,18 @@ export class MidiTrack {
         while (thisIdx < this._events.length || trackIdx < track._events.length) {
             if (trackIdx >= track._events.length ||
                 this._events[thisIdx]?.globalTime <= track._events[trackIdx].globalTime) {
-                this._events[thisIdx].event.deltaTime = this._events[thisIdx].globalTime - mergeTime;
-                newTrack._events.push(this._events[thisIdx]);
+                const newEvent = structuredClone(this.events[thisIdx]);
+                newEvent.event.deltaTime = this._events[thisIdx].globalTime - mergeTime;
+                newTrack._events.push(newEvent);
                 mergeTime = this._events[thisIdx].globalTime;
                 thisIdx++;
             }
             else {
-                if (track._events[trackIdx].event.type != "meta") {
-                    track._events[trackIdx].event.deltaTime = track._events[trackIdx].globalTime - mergeTime;
-                    newTrack._events.push(track._events[trackIdx]);
+                if (track.events[trackIdx].event.type !== "meta") { // only keep meta data from "this" track
+                    const newEvent = structuredClone(track.events[trackIdx]);
+                    newEvent.event.deltaTime = track._events[trackIdx].globalTime - mergeTime;
+                    newTrack._events.push(newEvent);
                     mergeTime = track._events[trackIdx].globalTime;
-                    trackIdx++;
                 }
 
                 trackIdx++;
@@ -119,7 +138,7 @@ export class MidiTrack {
 
         while (thisIdx < this._notes.length || trackIdx < track._notes.length) {
             if (trackIdx >= track._notes.length ||
-                this._notes[thisIdx].start <= track._notes[trackIdx].start) {
+                (thisIdx < this._notes.length && this._notes[thisIdx].start <= track._notes[trackIdx].start)) {
                 newTrack._notes.push(this._notes[thisIdx]);
                 thisIdx++;
             }
@@ -191,20 +210,20 @@ export class MidiEvent {
 
 export class Note {
     private static _lastId: number = 0;
-    public readonly id: number = 0;
-    public readonly start: number;
-    public readonly noteNumber: number;
-    public readonly velocity: number;
+    readonly id: number = 0;
+    readonly start: number;
+    readonly noteNumber: number;
+    readonly velocity: number;
 
     private _end: number | null = null;
-    public get end(): number | null { return this._end; }
-    public set end(value: number) {
+    get end(): number | null { return this._end; }
+    set end(value: number) {
         this._end = value;
         this._width = value - this.start;
     }
 
     private _width: number | null = null;
-    public get width(): number | null { return this._width; }
+    get width(): number | null { return this._width; }
 
     constructor(start: number, noteNumber: number, velocity: number) {
         this.id = ++Note._lastId;

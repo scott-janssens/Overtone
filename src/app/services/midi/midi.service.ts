@@ -220,18 +220,7 @@ export class MidiService {
         }
 
         let lastGlobal = 0;
-        for (const track of this._tracks) {
-            for (let i = track.events.length - 1; i >= 0; i--) {
-                const midiEvent = track.events[i];
-                if ((midiEvent.event.type === "meta" &&
-                        midiEvent.event.subtype === "endOfTrack") ||
-                    (midiEvent.event.type === "channel" &&
-                        midiEvent.event.subtype === "noteOff")) {
-                    lastGlobal = Math.max(lastGlobal, midiEvent.globalTime);
-                    break;
-                }
-            }
-        }
+        this._tracks.forEach(track => lastGlobal = Math.max(lastGlobal, track.endOfTrack));
 
         const beatUnit = metadata.timeSigDenominator / 4;
         barTime = midi.header.ticksPerBeat * metadata.timeSigNumerator / beatUnit;
